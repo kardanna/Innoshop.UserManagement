@@ -1,0 +1,43 @@
+using Microsoft.Extensions.Options;
+using UserManagement.Application.Contexts;
+using UserManagement.Application.Interfaces;
+using UserManagement.Application.Models;
+using UserManagement.Application.Options;
+using UserManagement.Application.Repositories;
+using UserManagement.Domain.Errors;
+
+namespace UserManagement.Application.Policies;
+
+public class RegistrationPolicy : IRegistrationPolicy
+{
+    private readonly IUserRepository _repository;
+    private readonly RegistrationOptions _options;
+
+    public RegistrationPolicy(
+        IUserRepository repository,
+        IOptions<RegistrationOptions> options)
+    {
+        _repository = repository;
+        _options = options.Value;
+    }
+
+    public async Task<CanRegisterResult> IsRegistrationAllowed(RegistrationContext context)
+    {
+        var isOfLegalAge = context.DateOfBirth <
+            DateOnly.FromDateTime(DateTime.Now.AddYears(-_options.MustBeAtLeastYears));
+
+        if (!isOfLegalAge)
+        {
+            return CanRegisterResult.Failure(DomainErrors.Register.IllegalAge);
+        }
+
+        var isEmailAvailable = await _repository.CountUsersWithEmailAsync(context.Email) == 0;
+
+        if (!isEmailAvailable)
+        {
+            return CanRegisterResult.Failure(DomainErrors.Register.EmailAlreadyInUse);
+        }
+
+        return CanRegisterResult.Success;
+    }
+}

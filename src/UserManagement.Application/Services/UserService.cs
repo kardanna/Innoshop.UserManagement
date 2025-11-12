@@ -1,0 +1,100 @@
+using Microsoft.AspNetCore.Identity;
+using UserManagement.Application.Contexts;
+using UserManagement.Application.Interfaces;
+using UserManagement.Application.Repositories;
+using UserManagement.Domain.Entities;
+using UserManagement.Domain.Errors;
+using UserManagement.Domain.Shared;
+
+namespace UserManagement.Application.Services;
+
+public class UserService : IUserService
+{
+    private readonly IEmailVerificationService _emailService;
+    private readonly IUserRepository _userRepository;
+    private readonly IPasswordHasher<User> _hasher;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ILoginAttemptPolicy _loginPolicy;
+    private readonly IRegistrationPolicy _registrationPolicy;
+
+    public UserService(
+        IEmailVerificationService emailService,
+        IUserRepository userRepository,
+        IPasswordHasher<User> hasher,
+        IUnitOfWork unitOfWork,
+        ILoginAttemptPolicy loginPolicy,
+        IRegistrationPolicy registrationPolicy)
+    {
+        _emailService = emailService;
+        _userRepository = userRepository;
+        _hasher = hasher;
+        _unitOfWork = unitOfWork;
+        _loginPolicy = loginPolicy;
+        _registrationPolicy = registrationPolicy;
+    }
+
+    public async Task<Result<User>> LoginAsync(LoginContext context)
+    {
+        var loginAttempt = await _loginPolicy.IsLoginAllowed(context);
+
+        if (!loginAttempt.IsAllowed)
+        {
+            return loginAttempt.Error;
+        }
+
+        _loginPolicy.RegisterAttempt(context);
+
+        await _unitOfWork.SaveChangesAsync();
+        
+        var user = await _userRepository.GetAsync(context.Email);
+
+        if (user == null)
+        {
+            return DomainErrors.Login.WrongEmailOrPassword;
+        }
+        
+        var passwordMatch = _hasher.VerifyHashedPassword(null!, user.PasswordHash, context.Password);
+
+        if (passwordMatch == PasswordVerificationResult.Failed)
+        {
+            return DomainErrors.Login.WrongEmailOrPassword;
+        }
+
+        if (!user.IsEmailVerified)
+        {
+            return DomainErrors.Login.EmailUnverified;
+        }
+
+        //await _unitOfWork.SaveChangesAsync();
+
+        return user;
+    }
+
+    public async Task<Result<Guid>> RegisterAsync(RegistrationContext context)
+    {
+        var registrationAttempt = await _registrationPolicy.IsRegistrationAllowed(context);
+
+        if (!registrationAttempt.IsAllowed)
+        {
+            return registrationAttempt.Error;
+        }
+
+        var user = new User()
+        {
+            FirstName = context.FirstName,
+            LastName = context.LastName,
+            DateOfBirth = context.DateOfBirth,
+            Email = context.Email,
+            PasswordHash = _hasher.HashPassword(null!, context.Password),
+            Roles = [],
+            CreatedAt = DateTime.UtcNow,
+            LastModifiedAt = DateTime.UtcNow
+        };
+
+        await _emailService.SendRequestToVerifyCurrentEmailAsync(user);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return user.Id;
+    }
+}
