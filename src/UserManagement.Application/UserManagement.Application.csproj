@@ -1,8 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\UserManagement.Domain\UserManagement.Domain.csproj" />
-  </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.0" />
@@ -10,10 +12,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UserManagement.Domain\UserManagement.Domain.csproj" />
+  </ItemGroup>
 
 </Project>
