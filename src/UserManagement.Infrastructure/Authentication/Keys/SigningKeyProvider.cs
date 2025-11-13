@@ -125,8 +125,8 @@ public class SigningKeyProvider : ISigningKeyProvider
         return new SigningKey()
         {
             Id = record.Id,
-            PrivateKey = new RsaSecurityKey(privateKeyRsa) { KeyId = record.Id.ToString() },
-            PublicKey = new RsaSecurityKey(publicKeyRsa),
+            PrivateKey = new RsaSecurityKey(privateKeyRsa),
+            PublicKey = new RsaSecurityKey(publicKeyRsa) { KeyId = record.Id.ToString() },
             IssuedAt = record.IssuedAt,
             SigningExpiresAt = record.IssuedAt.AddDays(_options.SingingKeyLifetimeDays),
             ExpiresAt = record.IssuedAt.AddDays(_options.ValidationKeyLifetimeDays)

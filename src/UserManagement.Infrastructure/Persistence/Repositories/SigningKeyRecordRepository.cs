@@ -16,7 +16,7 @@ public class SigningKeyRecordsRepository : ISigningKeyRecordRepository
     public async Task<IEnumerable<SigningKeyRecord>> GetValidSigningKeysAsync(int numberOfDaysKeyIsValid)
     {
         return await _appContext.SigningKeys
-            .Where(sk => sk.IssuedAt < DateTime.UtcNow.AddDays(-numberOfDaysKeyIsValid))
+            .Where(sk => sk.IssuedAt > DateTime.UtcNow.AddDays(-numberOfDaysKeyIsValid))
             .ToListAsync();
     }
 

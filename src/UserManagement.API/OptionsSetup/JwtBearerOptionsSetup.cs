@@ -6,7 +6,7 @@ using UserManagement.Infrastructure.Authentication.Keys;
 
 namespace UserManagement.API.OptionsSetup;
 
-public class JwtBearerOptionsSetup : IConfigureOptions<JwtBearerOptions>
+public class JwtBearerOptionsSetup : IConfigureNamedOptions<JwtBearerOptions>
 {
     private readonly JwtOptions _jwtOptions;
     private readonly ISigningKeyCache _cache;
@@ -17,8 +17,10 @@ public class JwtBearerOptionsSetup : IConfigureOptions<JwtBearerOptions>
         _cache = cache;
     }
 
-    public void Configure(JwtBearerOptions options)
+    public void Configure(string? name, JwtBearerOptions options)
     {
+        if (name != JwtBearerDefaults.AuthenticationScheme) return;
+
         options.TokenValidationParameters = new TokenValidationParameters()
         {
             ValidateIssuer = true,
@@ -36,5 +38,10 @@ public class JwtBearerOptionsSetup : IConfigureOptions<JwtBearerOptions>
                 return _cache.GetUnexpiredValidationKeys();
             }
         };
+    }
+
+    public void Configure(JwtBearerOptions options)
+    {
+        Configure(JwtBearerDefaults.AuthenticationScheme, options);
     }
 }
