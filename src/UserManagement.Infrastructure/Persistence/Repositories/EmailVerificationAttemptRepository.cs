@@ -15,7 +15,8 @@ public class EmailVerificationAttemptRepository : IEmailVerificationAttemptRepos
 
     public void Add(EmailVerificationAttempt attempt)
     {
-        _appContext.EmailVerificationAttempts.Add(attempt);
+        _appContext.EmailVerificationAttempts
+            .Add(attempt);
     }
 
     public async Task<EmailVerificationAttempt?> GetAsync(string attemptCode)
@@ -23,6 +24,23 @@ public class EmailVerificationAttemptRepository : IEmailVerificationAttemptRepos
         return await _appContext.EmailVerificationAttempts
             .Include(a => a.User)
             .Where(a => a.VerificationCode == attemptCode)
+            .FirstOrDefaultAsync();
+    }
+
+    public void RemoveUnseccessfulAttemptsFor(string email)
+    {
+        var attempts = _appContext.EmailVerificationAttempts
+            .Where(a => a.PreviousEmail != null && a.PreviousEmail == email && a.IsSucceeded == false);
+
+        _appContext.EmailVerificationAttempts
+            .RemoveRange(attempts);
+    }
+
+    public Task<EmailVerificationAttempt?> GetLastSuccessfulAttemptAsync(string email)
+    {
+        return _appContext.EmailVerificationAttempts
+            .Where(a => a.Email == email && a.IsSucceeded)
+            .OrderByDescending(a => a.AttemptedAt)
             .FirstOrDefaultAsync();
     }
 }

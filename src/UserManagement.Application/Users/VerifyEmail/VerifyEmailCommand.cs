@@ -1,6 +1,6 @@
 using UserManagement.Application.Messaging;
 
-namespace UserManagement.Application.Users.EmailConfirmation;
+namespace UserManagement.Application.Users.VerifyEmail;
 
 public class VerifyEmailCommand : ICommand
 {

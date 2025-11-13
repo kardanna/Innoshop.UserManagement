@@ -12,6 +12,7 @@ using UserManagement.Application.Repositories;
 using UserManagement.Application.Services;
 using UserManagement.Domain.Entities;
 using UserManagement.Infrastructure.Authentication.Keys;
+using UserManagement.Infrastructure.Authentication.Repositories;
 using UserManagement.Infrastructure.Authentication.Tokens;
 using UserManagement.Infrastructure.Persistence;
 using UserManagement.Infrastructure.Persistence.Repositories;
@@ -42,7 +43,8 @@ public class Program
         builder.Services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
         builder.Services.AddScoped<IEmailVerificationAttemptRepository, EmailVerificationAttemptRepository>();
         builder.Services.AddScoped<IRegistrationPolicy, RegistrationPolicy>();
-        builder.Services.AddScoped<ILoginAttemptPolicy, LoginAttemptPolicy>();
+        builder.Services.AddScoped<ILoginPolicy, LoginPolicy>();
+        builder.Services.AddScoped<IEmailPolicy, EmailPolicy>();
 
         builder.Services.AddSingleton<ISigningKeyCache, SigningKeysCache>();
         builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
@@ -50,13 +52,14 @@ public class Program
         builder.Services.AddScoped<ISigningKeyProvider, SigningKeyProvider>();
         builder.Services.AddScoped<ITokenProvider, TokenProvider>();
         builder.Services.AddScoped<IUserService, UserService>();
-        builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+        builder.Services.AddScoped<IEmailService, EmailService>();
 
         builder.Services.ConfigureOptions<JwtOptionsSetup>();
         builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
         builder.Services.ConfigureOptions<SigningKeyOptionsSetup>();
         builder.Services.ConfigureOptions<LoginOptionsSetup>();
         builder.Services.ConfigureOptions<RegistrationOptionsSetup>();
+        builder.Services.ConfigureOptions<EmailOptionsSetup>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme);

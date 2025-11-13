@@ -2,20 +2,19 @@ using UserManagement.Application.Interfaces;
 using UserManagement.Application.Messaging;
 using UserManagement.Domain.Shared;
 
-namespace UserManagement.Application.Users.EmailConfirmation;
+namespace UserManagement.Application.Users.VerifyEmail;
 
 public class VerifyEmailCommandHandler : ICommandHandler<VerifyEmailCommand>
 {
-    private readonly IEmailVerificationService _service;
+    private readonly IEmailService _service;
 
-    public VerifyEmailCommandHandler(IEmailVerificationService service)
+    public VerifyEmailCommandHandler(IEmailService service)
     {
         _service = service;
     }
 
     public async Task<Result> Handle(VerifyEmailCommand request, CancellationToken cancellationToken)
     {
-        await _service.VerifyFromRequest(request.VerificationCode);
-        return Result.Success();
+        return await _service.ConfirmSednedRequestAsync(request.VerificationCode);
     }
 }

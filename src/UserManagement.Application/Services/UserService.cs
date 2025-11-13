@@ -10,19 +10,19 @@ namespace UserManagement.Application.Services;
 
 public class UserService : IUserService
 {
-    private readonly IEmailVerificationService _emailService;
+    private readonly IEmailService _emailService;
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher<User> _hasher;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILoginAttemptPolicy _loginPolicy;
+    private readonly ILoginPolicy _loginPolicy;
     private readonly IRegistrationPolicy _registrationPolicy;
 
     public UserService(
-        IEmailVerificationService emailService,
+        IEmailService emailService,
         IUserRepository userRepository,
         IPasswordHasher<User> hasher,
         IUnitOfWork unitOfWork,
-        ILoginAttemptPolicy loginPolicy,
+        ILoginPolicy loginPolicy,
         IRegistrationPolicy registrationPolicy)
     {
         _emailService = emailService;
@@ -35,16 +35,12 @@ public class UserService : IUserService
 
     public async Task<Result<User>> LoginAsync(LoginContext context)
     {
-        var loginAttempt = await _loginPolicy.IsLoginAllowed(context);
+        var attempt = await _loginPolicy.IsLoginAllowedAsync(context);
 
-        if (!loginAttempt.IsAllowed)
+        if (!attempt.IsAllowed)
         {
-            return loginAttempt.Error;
+            return attempt.Error;
         }
-
-        _loginPolicy.RegisterAttempt(context);
-
-        await _unitOfWork.SaveChangesAsync();
         
         var user = await _userRepository.GetAsync(context.Email);
 
@@ -72,11 +68,11 @@ public class UserService : IUserService
 
     public async Task<Result<Guid>> RegisterAsync(RegistrationContext context)
     {
-        var registrationAttempt = await _registrationPolicy.IsRegistrationAllowed(context);
+        var attempt = await _registrationPolicy.IsRegistrationAllowedAsync(context);
 
-        if (!registrationAttempt.IsAllowed)
+        if (!attempt.IsAllowed)
         {
-            return registrationAttempt.Error;
+            return attempt.Error;
         }
 
         var user = new User()
@@ -91,10 +87,19 @@ public class UserService : IUserService
             LastModifiedAt = DateTime.UtcNow
         };
 
-        await _emailService.SendRequestToVerifyCurrentEmailAsync(user);
+        await _emailService.SendRequestToVerifyUserEmailAsync(user);
 
         await _unitOfWork.SaveChangesAsync();
 
         return user.Id;
+    }
+
+    public async Task<Result<User>> GetUserAsync(Guid id)
+    {
+        var user = await _userRepository.GetAsync(id);
+
+        if (user == null) return DomainErrors.User.NotFound;
+
+        return Result.Success(user);
     }
 }

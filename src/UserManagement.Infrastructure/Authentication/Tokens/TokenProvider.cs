@@ -4,13 +4,13 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using UserManagement.Application.Interfaces;
-using UserManagement.Application.Repositories;
 using UserManagement.Application.Users.Login;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using UserManagement.Infrastructure.Authentication.Configuration;
 using UserManagement.Infrastructure.Authentication.Keys;
+using UserManagement.Infrastructure.Authentication.Repositories;
 
 namespace UserManagement.Infrastructure.Authentication.Tokens;
 

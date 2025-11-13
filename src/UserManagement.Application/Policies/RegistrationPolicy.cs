@@ -21,23 +21,23 @@ public class RegistrationPolicy : IRegistrationPolicy
         _options = options.Value;
     }
 
-    public async Task<CanRegisterResult> IsRegistrationAllowed(RegistrationContext context)
+    public async Task<PolicyResult> IsRegistrationAllowedAsync(RegistrationContext context)
     {
         var isOfLegalAge = context.DateOfBirth <
             DateOnly.FromDateTime(DateTime.Now.AddYears(-_options.MustBeAtLeastYears));
 
         if (!isOfLegalAge)
         {
-            return CanRegisterResult.Failure(DomainErrors.Register.IllegalAge);
+            return DomainErrors.Register.IllegalAge;
         }
 
         var isEmailAvailable = await _repository.CountUsersWithEmailAsync(context.Email) == 0;
 
         if (!isEmailAvailable)
         {
-            return CanRegisterResult.Failure(DomainErrors.Register.EmailAlreadyInUse);
+            return DomainErrors.Register.EmailAlreadyInUse;
         }
 
-        return CanRegisterResult.Success;
+        return PolicyResult.Success;
     }
 }

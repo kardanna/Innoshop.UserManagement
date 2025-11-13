@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -20,6 +21,12 @@ public class JwtBearerOptionsSetup : IConfigureNamedOptions<JwtBearerOptions>
     public void Configure(string? name, JwtBearerOptions options)
     {
         if (name != JwtBearerDefaults.AuthenticationScheme) return;
+
+        var handler = new JwtSecurityTokenHandler();
+        handler.InboundClaimTypeMap.Clear();
+
+        options.TokenHandlers.Clear();
+        options.TokenHandlers.Add(handler);
 
         options.TokenValidationParameters = new TokenValidationParameters()
         {

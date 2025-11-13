@@ -6,7 +6,10 @@ public static class DomainErrors
 {
     public static class User
     {
-
+        public static readonly Error NotFound = new(
+            "User.NotFound",
+            "Requested user not found."
+        );
     }
 
     public static class Register
@@ -21,7 +24,7 @@ public static class DomainErrors
             "User must be older to register."
         );
     }
-    
+
     public static class Email
     {
         public static readonly Error InvalidFormat = new(
@@ -30,6 +33,32 @@ public static class DomainErrors
         );
     }
 
+    public static class EmailVerification
+    {
+        public static readonly Error CodeExpiredOrNotFound = new(
+            "EmailVerification.CodeExpiredOrNotFound",
+            "Verification code is invalid or has expired."
+        );
+    }
+
+    public static class EmailChange
+    {
+        public static readonly Error EmailAlreadyInUse = new(
+            "EmailChange.EmailAlreadyInUse",
+            "Specified email is already in use."
+        );
+
+        public static readonly Error TooOften = new(
+            "EmailChange.TooOften",
+            "Policy on number of successful email changes in a set period of time is violated."
+        );
+
+        public static readonly Error TheSameEmail = new(
+            "EmailChange.TheSameEmail",
+            "New email must differ from current email."
+        );
+    }
+    
     public static class Login
     {
         public static readonly Error WrongEmailOrPassword = new(

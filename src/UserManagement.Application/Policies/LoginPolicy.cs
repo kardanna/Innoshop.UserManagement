@@ -8,35 +8,40 @@ using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.Policies;
 
-public class LoginAttemptPolicy : ILoginAttemptPolicy
+public class LoginPolicy : ILoginPolicy
 {
     private readonly ILoginAttemptRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly LoginOptions _options;
 
-    public LoginAttemptPolicy(
+    public LoginPolicy(
         ILoginAttemptRepository repository,
+        IUnitOfWork unitOfWork,
         IOptions<LoginOptions> options)
     {
         _repository = repository;
+        _unitOfWork = unitOfWork;
         _options = options.Value;
     }
 
-    public async Task<CanLoginResult> IsLoginAllowed(LoginContext context)
+    public async Task<PolicyResult> IsLoginAllowedAsync(LoginContext context)
     {
         var numberOfAttempts = await _repository
             .CountLoginAttemptsAsync(context.Email, _options.LoginAttemptsTimeWindowInMinutes);
 
         if (numberOfAttempts > _options.LoginAttemptsMaxCount)
         {
-            return CanLoginResult.Failure(DomainErrors.Login.TooManyAttempts);
+            return DomainErrors.Login.TooManyAttempts;
         }
 
-        //await _repository.RegisterAttemptAsync(email);
+        RegisterAttempt(context);
+
+        await _unitOfWork.SaveChangesAsync();
         
-        return CanLoginResult.Success;
+        return PolicyResult.Success;
     }
 
-    public void RegisterAttempt(LoginContext context)
+    private void RegisterAttempt(LoginContext context)
     {
         _repository.AddAttempt(context.Email, context.DeviceFingerprint);
     }

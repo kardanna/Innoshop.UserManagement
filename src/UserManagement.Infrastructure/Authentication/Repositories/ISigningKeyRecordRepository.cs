@@ -1,6 +1,6 @@
 using UserManagement.Domain.Entities;
 
-namespace UserManagement.Infrastructure.Authentication.Keys;
+namespace UserManagement.Infrastructure.Authentication.Repositories;
 
 public interface ISigningKeyRecordRepository
 {

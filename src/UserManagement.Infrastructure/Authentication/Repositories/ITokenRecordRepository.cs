@@ -1,6 +1,6 @@
 using UserManagement.Domain.Entities;
 
-namespace UserManagement.Application.Repositories;
+namespace UserManagement.Infrastructure.Authentication.Repositories;
 
 public interface ITokenRecordRepository
 {

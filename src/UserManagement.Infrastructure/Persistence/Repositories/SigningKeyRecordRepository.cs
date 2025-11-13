@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Domain.Entities;
-using UserManagement.Infrastructure.Authentication.Keys;
+using UserManagement.Infrastructure.Authentication.Repositories;
 
 namespace UserManagement.Infrastructure.Persistence.Repositories;
 

@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using UserManagement.Application.Interfaces;
 using UserManagement.Domain.Entities;
 using UserManagement.Infrastructure.Authentication.Configuration;
+using UserManagement.Infrastructure.Authentication.Repositories;
 
 namespace UserManagement.Infrastructure.Authentication.Keys;
 

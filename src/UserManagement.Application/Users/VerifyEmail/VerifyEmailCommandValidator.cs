@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace UserManagement.Application.Users.EmailConfirmation;
+namespace UserManagement.Application.Users.VerifyEmail;
 
 public class VerifyEmailCommandValidator : AbstractValidator<VerifyEmailCommand>
 {
