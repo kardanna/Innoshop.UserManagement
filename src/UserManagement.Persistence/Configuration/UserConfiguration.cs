@@ -34,13 +34,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.IsDeleted)
             .HasDefaultValue(false);
 
-        builder.Property(u => u.CreatedAt)
-            .HasDefaultValueSql("GETUTCDATE()")
-            .ValueGeneratedOnAddOrUpdate();
-
-        builder.Property(u => u.LastModifiedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
-
         builder.HasData( 
             [
                 new User()

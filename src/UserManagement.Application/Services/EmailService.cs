@@ -79,7 +79,7 @@ public class EmailService : IEmailService
         attemptRecord.IsSucceeded = true;
         attemptRecord.SucceededAt = DateTime.UtcNow;
         attemptRecord.User.IsEmailVerified = true;
-        attemptRecord.User.LastModifiedAt = DateTime.UtcNow; //Handle differently
+        //attemptRecord.User.LastModifiedAt = DateTime.UtcNow; //Handle differently
 
         if (attemptRecord.PreviousEmail != null)
         {

@@ -87,9 +87,7 @@ public class UserService : IUserService
             DateOfBirth = context.DateOfBirth,
             Email = context.Email,
             PasswordHash = _hasher.HashPassword(null!, context.Password),
-            Roles = [],
-            CreatedAt = DateTime.UtcNow,
-            LastModifiedAt = DateTime.UtcNow
+            Roles = []
         };
 
         await _emailService.SendRequestToVerifyUserEmailAsync(user);
