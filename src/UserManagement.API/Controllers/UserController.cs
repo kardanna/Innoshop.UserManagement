@@ -1,15 +1,13 @@
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using UserManagement.API.DTOs;
-using UserManagement.Application.Users.VerifyEmail;
-using UserManagement.Application.Users.Registration;
-using UserManagement.Application.Users.ChangeEmail;
-using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
-using UserManagement.Domain.Shared;
-using UserManagement.Domain.Errors;
+using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using UserManagement.API.DTOs;
 using UserManagement.Application.Users.Get;
+using UserManagement.Application.Users.Registration;
 using UserManagement.Domain.Entities;
+using UserManagement.Domain.Errors;
+using UserManagement.Domain.Shared;
 
 namespace UserManagement.API.Controllers;
 
@@ -71,18 +69,6 @@ public class UserController : BaseApiController
 
         return Ok(response.Value);
     }
- 
-    [HttpPost("email/confirm")]
-    public async Task<IActionResult> Post([FromBody] VerifyEmailRequest request)
-    {
-        var command = new VerifyEmailCommand(request.VerificationCode);
-
-        var response = await _sender.Send(command);
-
-        if (response.IsFailure) return HandleFailure(response);
-
-        return Ok();
-    }
 
     [HttpPost("register")]
     public async Task<IActionResult> Post([FromBody] RegisterUserRequest request)
@@ -100,33 +86,5 @@ public class UserController : BaseApiController
         if (response.IsFailure) return HandleFailure(response);
 
         return Ok(response.Value);
-    }
-    
-    [Authorize]
-    [HttpPost("email/change")]
-    public async Task<IActionResult> Post([FromBody] ChangeEmailRequest request)
-    {
-        foreach (var claim in HttpContext.User.Claims)
-        {
-            Console.WriteLine($"Type: {claim.Type}, value: {claim.Value}");
-        }
-
-        var idString = HttpContext.User.Claims
-            .Where(c => c.Type == JwtRegisteredClaimNames.Sub)
-            .FirstOrDefault()
-            ?.Value;
-
-        if (idString == null || !Guid.TryParse(idString, out var id))
-        {
-            return HandleFailure(Result.Failure(DomainErrors.User.NotFound));
-        }
-        
-        var command = new ChangeEmailCommand(id, request.NewEmail);
-
-        var response = await _sender.Send(command);
-
-        if (response.IsFailure) return HandleFailure(response);
-
-        return Ok();
     }
 }
