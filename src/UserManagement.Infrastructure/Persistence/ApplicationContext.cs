@@ -6,8 +6,7 @@ namespace UserManagement.Infrastructure.Persistence;
 public class ApplicationContext : DbContext
 {
     public DbSet<User> Users { get; set; }
-    public DbSet<UserRole> UserRoles { get; set; }
-    public DbSet<RoleClaim> RoleClaims { get; set; }
+    public DbSet<Role> UserRoles { get; set; }
 
     public DbSet<LoginAttempt> LoginAttempts { get; set; }
     public DbSet<EmailVerificationAttempt> EmailVerificationAttempts { get; set; }

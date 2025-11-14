@@ -12,6 +12,14 @@ public static class DomainErrors
         );
     }
 
+    public static class Authentication
+    {
+        public static readonly Error InvalidSubjectClaim = new(
+            "Authentication.InvalidSubjectClaim",
+            "Token has no subject claim or claim value is invalid."
+        );
+    }
+
     public static class Register
     {
         public static readonly Error EmailAlreadyInUse = new(

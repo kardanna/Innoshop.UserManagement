@@ -39,21 +39,14 @@ public class TokenProvider : ITokenProvider
 
         var tokenRecord = CreateTokenRecord(user);
 
-        var userClaims = user.Roles
-            .SelectMany(r => r.Claims)
-            .DistinctBy(c => new { c.Type, c.Value }); // Implement comparer for RoleClaim????
+        List<Claim> claims = user.Roles
+            .DistinctBy(c => c.Name)
+            .Select(r => new Claim(ClaimTypes.Role, r.Name))
+            .ToList();
 
-        var claims = new List<Claim>
-        {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Jti, tokenRecord.AccessTokenId.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email)
-        };
-
-        foreach (var claim in userClaims)
-        {
-            claims.Add(new(claim.Type, claim.Value));
-        }        
+        claims.Add(new(JwtRegisteredClaimNames.Sub, user.Id.ToString()));
+        claims.Add(new(JwtRegisteredClaimNames.Email, user.Email));
+        claims.Add(new(JwtRegisteredClaimNames.Jti, tokenRecord.AccessTokenId.ToString()));
 
         var signingCredentials = new SigningCredentials(
             signingKey,

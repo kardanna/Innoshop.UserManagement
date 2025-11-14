@@ -34,24 +34,37 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.IsDeleted)
             .HasDefaultValue(false);
 
-        /*builder.Property(u => u.CreatedAt)
+        builder.Property(u => u.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()")
             .ValueGeneratedOnAddOrUpdate();
 
         builder.Property(u => u.LastModifiedAt)
-            .HasComputedColumnSql("GETUTCDATE()", true)
-            .ValueGeneratedOnAddOrUpdate();*/
+            .HasDefaultValueSql("GETUTCDATE()");
 
-        builder.HasData(
-            new User()
-            {
-                Id = Guid.Parse("2f6ba6b8-e14d-4b05-942d-e2c1344ce708"),
-                FirstName = "Ivan",
-                LastName = "Ivanov",
-                Email = "ivan.ivanov@gmail.com",
-                PasswordHash = "123456",
-                IsEmailVerified = true
-            }
+        builder.HasData( 
+            [
+                new User()
+                { 
+                    Id = Guid.Parse("30fc2d9e-3bb0-4bdc-d15b-08de2383d454"),
+                    FirstName = "Admin",
+                    LastName = "Admin",
+                    DateOfBirth = DateOnly.Parse("2000-01-01"),
+                    Email = "admin@innoshop.by",
+                    PasswordHash = "AQAAAAIAAYagAAAAEBZ2EtG4oB80p/B/1tWjr27MgHcqtVLPyaf7a/wnQsC7/rzf0J2fVO1jMhrGPy5vQw==", //Admin123
+                    IsEmailVerified = true
+                },
+                
+                new User()
+                {
+                    Id = Guid.Parse("160be924-907f-4d70-d15c-08de2383d454"),
+                    FirstName = "Ivan",
+                    LastName = "Ivanov",
+                    Email = "ivan.ivanov@gmail.com",
+                    DateOfBirth = DateOnly.Parse("2000-01-01"),
+                    PasswordHash = "AQAAAAIAAYagAAAAEDUID6axCz6cvyUWqrPGPCrA+Mm5w8K+1vSgeMrXoqk+NjrjeiCIS9IevKEbet2QdQ==", //IvanIvanov123
+                    IsEmailVerified = true
+                }
+            ]
         );
     }
 }

@@ -9,7 +9,7 @@ public class User
     public string Email { get; set; } = null!;
     public bool IsEmailVerified { get; set; }
     public string PasswordHash { get; set; } = null!;
-    public virtual ICollection<UserRole> Roles { get; set; } = new List<UserRole>();
+    public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
 
     public bool IsDeactivated { get; set; }
     public DateTime? DeactivationRequestedAt { get; set; }

@@ -17,7 +17,6 @@ public class UserRepository : IUserRepository
     {
         return await _appContext.Users
             .Include(u => u.Roles)
-            .ThenInclude(r => r.Claims)
             .FirstOrDefaultAsync(u => u.Id == id);
     }
 
@@ -25,7 +24,6 @@ public class UserRepository : IUserRepository
     {
         return await _appContext.Users
             .Include(u => u.Roles)
-            .ThenInclude(r => r.Claims)
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 

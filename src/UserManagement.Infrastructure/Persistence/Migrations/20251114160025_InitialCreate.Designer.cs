@@ -12,7 +12,7 @@ using UserManagement.Infrastructure.Persistence;
 namespace UserManagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20251111185806_InitialCreate")]
+    [Migration("20251114160025_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,28 +20,10 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("RoleClaimUserRole", b =>
-                {
-                    b.Property<Guid>("RolesId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClaimsType")
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<string>("ClaimsValue")
-                        .HasColumnType("nvarchar(40)");
-
-                    b.HasKey("RolesId", "ClaimsType", "ClaimsValue");
-
-                    b.HasIndex("ClaimsType", "ClaimsValue");
-
-                    b.ToTable("RoleClaimUserRole", "Identity");
-                });
 
             modelBuilder.Entity("UserManagement.Domain.Entities.EmailVerificationAttempt", b =>
                 {
@@ -49,21 +31,19 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AttemptCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime>("AttemptedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsSucceeded")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("NewEmail")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("OldEmail")
+                    b.Property<bool>("IsSucceeded")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("PreviousEmail")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("SucceededAt")
@@ -72,9 +52,13 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("VerificationCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("AttemptCode");
+                    b.HasAlternateKey("VerificationCode");
 
                     b.HasIndex("UserId");
 
@@ -88,6 +72,9 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("AttemtedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("DeviceFingerprint")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Email", "AttemtedAt");
 
@@ -125,22 +112,33 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                     b.ToTable("PasswordRestoreAttempt", "Identity");
                 });
 
-            modelBuilder.Entity("UserManagement.Domain.Entities.RoleClaim", b =>
+            modelBuilder.Entity("UserManagement.Domain.Entities.Role", b =>
                 {
-                    b.Property<string>("Type")
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Value")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.HasKey("Id");
 
-                    b.HasKey("Type", "Value");
+                    b.HasAlternateKey("Name");
 
-                    b.ToTable("Claim", "Identity");
+                    b.ToTable("Role", "Identity");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Administrator"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Customer"
+                        });
                 });
 
             modelBuilder.Entity("UserManagement.Domain.Entities.SigningKeyRecord", b =>
@@ -148,9 +146,6 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("IssuedAt")
                         .HasColumnType("datetime2");
@@ -163,18 +158,14 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("SigningExpiresAt")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
 
-                    b.ToTable("Signing", "RsaKey");
+                    b.ToTable("RsaKey", "SigningKeys");
                 });
 
             modelBuilder.Entity("UserManagement.Domain.Entities.TokenRecord", b =>
                 {
                     b.Property<Guid>("AccessTokenId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("AccessTokenExpiresAt")
@@ -189,9 +180,6 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                     b.Property<string>("RefreshToken")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("RefreshTokenExpiresAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -210,7 +198,9 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
@@ -247,7 +237,9 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<DateTime>("LastModifiedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -260,16 +252,28 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("Email");
-
                     b.ToTable("User", "Identity");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("2f6ba6b8-e14d-4b05-942d-e2c1344ce708"),
+                            Id = new Guid("30fc2d9e-3bb0-4bdc-d15b-08de2383d454"),
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateOfBirth = new DateOnly(1, 1, 1),
+                            DateOfBirth = new DateOnly(2000, 1, 1),
+                            Email = "admin@innoshop.by",
+                            FirstName = "Admin",
+                            IsDeactivated = false,
+                            IsDeleted = false,
+                            IsEmailVerified = true,
+                            LastModifiedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            LastName = "Admin",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBZ2EtG4oB80p/B/1tWjr27MgHcqtVLPyaf7a/wnQsC7/rzf0J2fVO1jMhrGPy5vQw=="
+                        },
+                        new
+                        {
+                            Id = new Guid("160be924-907f-4d70-d15c-08de2383d454"),
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(2000, 1, 1),
                             Email = "ivan.ivanov@gmail.com",
                             FirstName = "Ivan",
                             IsDeactivated = false,
@@ -277,56 +281,35 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                             IsEmailVerified = true,
                             LastModifiedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             LastName = "Ivanov",
-                            PasswordHash = "123456"
+                            PasswordHash = "AQAAAAIAAYagAAAAEDUID6axCz6cvyUWqrPGPCrA+Mm5w8K+1vSgeMrXoqk+NjrjeiCIS9IevKEbet2QdQ=="
                         });
                 });
 
             modelBuilder.Entity("UserManagement.Domain.Entities.UserRole", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId", "RoleId");
 
-                    b.HasAlternateKey("Name");
+                    b.HasIndex("RoleId");
 
-                    b.ToTable("Role", "Identity");
-                });
+                    b.ToTable("UserRole", "Identity");
 
-            modelBuilder.Entity("UserUserRole", b =>
-                {
-                    b.Property<Guid>("RolesId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UsersId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("RolesId", "UsersId");
-
-                    b.HasIndex("UsersId");
-
-                    b.ToTable("UserUserRole", "Identity");
-                });
-
-            modelBuilder.Entity("RoleClaimUserRole", b =>
-                {
-                    b.HasOne("UserManagement.Domain.Entities.UserRole", null)
-                        .WithMany()
-                        .HasForeignKey("RolesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UserManagement.Domain.Entities.RoleClaim", null)
-                        .WithMany()
-                        .HasForeignKey("ClaimsType", "ClaimsValue")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasData(
+                        new
+                        {
+                            UserId = new Guid("30fc2d9e-3bb0-4bdc-d15b-08de2383d454"),
+                            RoleId = 1
+                        },
+                        new
+                        {
+                            UserId = new Guid("160be924-907f-4d70-d15c-08de2383d454"),
+                            RoleId = 2
+                        });
                 });
 
             modelBuilder.Entity("UserManagement.Domain.Entities.EmailVerificationAttempt", b =>
@@ -362,17 +345,17 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("UserUserRole", b =>
+            modelBuilder.Entity("UserManagement.Domain.Entities.UserRole", b =>
                 {
-                    b.HasOne("UserManagement.Domain.Entities.UserRole", null)
+                    b.HasOne("UserManagement.Domain.Entities.Role", null)
                         .WithMany()
-                        .HasForeignKey("RolesId")
+                        .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("UserManagement.Domain.Entities.User", null)
                         .WithMany()
-                        .HasForeignKey("UsersId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -1,4 +1,3 @@
-using System.Reflection.Metadata;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.API.DTOs;
@@ -7,7 +6,7 @@ using UserManagement.Application.Users.Login;
 
 namespace UserManagement.API.Controllers;
 
-[Route("[controller]")]
+[Route("auth")]
 public class AuthController : BaseApiController
 {
     private readonly ILogger<AuthController> _logger;

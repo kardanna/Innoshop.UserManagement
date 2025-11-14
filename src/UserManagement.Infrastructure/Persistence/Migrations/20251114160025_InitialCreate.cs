@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace UserManagement.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
@@ -15,24 +17,10 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                 name: "Identity");
 
             migrationBuilder.EnsureSchema(
-                name: "RsaKey");
+                name: "SigningKeys");
 
             migrationBuilder.EnsureSchema(
                 name: "Authentication");
-
-            migrationBuilder.CreateTable(
-                name: "Claim",
-                schema: "Identity",
-                columns: table => new
-                {
-                    Type = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
-                    Value = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Claim", x => new { x.Type, x.Value });
-                });
 
             migrationBuilder.CreateTable(
                 name: "LoginAttempt",
@@ -40,7 +28,8 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    AttemtedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    AttemtedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeviceFingerprint = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -52,7 +41,7 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                 schema: "Identity",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
@@ -62,20 +51,18 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Signing",
-                schema: "RsaKey",
+                name: "RsaKey",
+                schema: "SigningKeys",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PublicKeyPem = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PrivateKeyPem = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IssuedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    SigningExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    IssuedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Signing", x => x.Id);
+                    table.PrimaryKey("PK_RsaKey", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -94,41 +81,12 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                     DeactivationRequestedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     DeletionRequestedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_User", x => x.Id);
-                    table.UniqueConstraint("AK_User_Email", x => x.Email);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "RoleClaimUserRole",
-                schema: "Identity",
-                columns: table => new
-                {
-                    RolesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ClaimsType = table.Column<string>(type: "nvarchar(15)", nullable: false),
-                    ClaimsValue = table.Column<string>(type: "nvarchar(40)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RoleClaimUserRole", x => new { x.RolesId, x.ClaimsType, x.ClaimsValue });
-                    table.ForeignKey(
-                        name: "FK_RoleClaimUserRole_Claim_ClaimsType_ClaimsValue",
-                        columns: x => new { x.ClaimsType, x.ClaimsValue },
-                        principalSchema: "Identity",
-                        principalTable: "Claim",
-                        principalColumns: new[] { "Type", "Value" },
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_RoleClaimUserRole_Role_RolesId",
-                        column: x => x.RolesId,
-                        principalSchema: "Identity",
-                        principalTable: "Role",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -137,18 +95,18 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AttemptCode = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    VerificationCode = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    NewEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OldEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PreviousEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     AttemptedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsSucceeded = table.Column<bool>(type: "bit", nullable: false),
+                    IsSucceeded = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     SucceededAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_EmailVerificationAttempt", x => x.Id);
-                    table.UniqueConstraint("AK_EmailVerificationAttempt_AttemptCode", x => x.AttemptCode);
+                    table.UniqueConstraint("AK_EmailVerificationAttempt_VerificationCode", x => x.VerificationCode);
                     table.ForeignKey(
                         name: "FK_EmailVerificationAttempt_User_UserId",
                         column: x => x.UserId,
@@ -193,7 +151,6 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                     AccessTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RefreshTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeviceFingerprint = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -209,26 +166,26 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserUserRole",
+                name: "UserRole",
                 schema: "Identity",
                 columns: table => new
                 {
-                    RolesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UsersId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RoleId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserUserRole", x => new { x.RolesId, x.UsersId });
+                    table.PrimaryKey("PK_UserRole", x => new { x.UserId, x.RoleId });
                     table.ForeignKey(
-                        name: "FK_UserUserRole_Role_RolesId",
-                        column: x => x.RolesId,
+                        name: "FK_UserRole_Role_RoleId",
+                        column: x => x.RoleId,
                         principalSchema: "Identity",
                         principalTable: "Role",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserUserRole_User_UsersId",
-                        column: x => x.UsersId,
+                        name: "FK_UserRole_User_UserId",
+                        column: x => x.UserId,
                         principalSchema: "Identity",
                         principalTable: "User",
                         principalColumn: "Id",
@@ -237,9 +194,33 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
 
             migrationBuilder.InsertData(
                 schema: "Identity",
+                table: "Role",
+                columns: new[] { "Id", "Name" },
+                values: new object[,]
+                {
+                    { 1, "Administrator" },
+                    { 2, "Customer" }
+                });
+
+            migrationBuilder.InsertData(
+                schema: "Identity",
                 table: "User",
-                columns: new[] { "Id", "CreatedAt", "DateOfBirth", "DeactivationRequestedAt", "DeletionRequestedAt", "Email", "FirstName", "IsEmailVerified", "LastModifiedAt", "LastName", "PasswordHash" },
-                values: new object[] { new Guid("2f6ba6b8-e14d-4b05-942d-e2c1344ce708"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateOnly(1, 1, 1), null, null, "ivan.ivanov@gmail.com", "Ivan", true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Ivanov", "123456" });
+                columns: new[] { "Id", "DateOfBirth", "DeactivationRequestedAt", "DeletionRequestedAt", "Email", "FirstName", "IsEmailVerified", "LastName", "PasswordHash" },
+                values: new object[,]
+                {
+                    { new Guid("160be924-907f-4d70-d15c-08de2383d454"), new DateOnly(2000, 1, 1), null, null, "ivan.ivanov@gmail.com", "Ivan", true, "Ivanov", "AQAAAAIAAYagAAAAEDUID6axCz6cvyUWqrPGPCrA+Mm5w8K+1vSgeMrXoqk+NjrjeiCIS9IevKEbet2QdQ==" },
+                    { new Guid("30fc2d9e-3bb0-4bdc-d15b-08de2383d454"), new DateOnly(2000, 1, 1), null, null, "admin@innoshop.by", "Admin", true, "Admin", "AQAAAAIAAYagAAAAEBZ2EtG4oB80p/B/1tWjr27MgHcqtVLPyaf7a/wnQsC7/rzf0J2fVO1jMhrGPy5vQw==" }
+                });
+
+            migrationBuilder.InsertData(
+                schema: "Identity",
+                table: "UserRole",
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[,]
+                {
+                    { 2, new Guid("160be924-907f-4d70-d15c-08de2383d454") },
+                    { 1, new Guid("30fc2d9e-3bb0-4bdc-d15b-08de2383d454") }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_EmailVerificationAttempt_UserId",
@@ -254,22 +235,16 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoleClaimUserRole_ClaimsType_ClaimsValue",
-                schema: "Identity",
-                table: "RoleClaimUserRole",
-                columns: new[] { "ClaimsType", "ClaimsValue" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_TokenRecord_UserId",
                 schema: "Authentication",
                 table: "TokenRecord",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserUserRole_UsersId",
+                name: "IX_UserRole_RoleId",
                 schema: "Identity",
-                table: "UserUserRole",
-                column: "UsersId");
+                table: "UserRole",
+                column: "RoleId");
         }
 
         /// <inheritdoc />
@@ -288,23 +263,15 @@ namespace UserManagement.Infrastructure.Persistence.Migrations
                 schema: "Identity");
 
             migrationBuilder.DropTable(
-                name: "RoleClaimUserRole",
-                schema: "Identity");
-
-            migrationBuilder.DropTable(
-                name: "Signing",
-                schema: "RsaKey");
+                name: "RsaKey",
+                schema: "SigningKeys");
 
             migrationBuilder.DropTable(
                 name: "TokenRecord",
                 schema: "Authentication");
 
             migrationBuilder.DropTable(
-                name: "UserUserRole",
-                schema: "Identity");
-
-            migrationBuilder.DropTable(
-                name: "Claim",
+                name: "UserRole",
                 schema: "Identity");
 
             migrationBuilder.DropTable(
