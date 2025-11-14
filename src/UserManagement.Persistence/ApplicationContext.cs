@@ -1,7 +1,7 @@
 using UserManagement.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace UserManagement.Infrastructure.Persistence;
+namespace UserManagement.Persistence;
 
 public class ApplicationContext : DbContext
 {
@@ -24,6 +24,6 @@ public class ApplicationContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.ApplyConfigurationsFromAssembly(UserManagement.Infrastructure.AssemblyReference.Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(UserManagement.Persistence.AssemblyReference.Assembly);
     }
 }

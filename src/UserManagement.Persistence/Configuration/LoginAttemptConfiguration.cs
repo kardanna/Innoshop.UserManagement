@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using UserManagement.Domain.Entities;
 
-namespace UserManagement.Infrastructure.Persistence.Configuration;
+namespace UserManagement.Persistence.Configuration;
 
 public class LoginAttemptConfiguration : IEntityTypeConfiguration<LoginAttempt>
 {

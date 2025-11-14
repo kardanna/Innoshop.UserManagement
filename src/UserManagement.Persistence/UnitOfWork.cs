@@ -1,6 +1,6 @@
 using UserManagement.Application.Interfaces;
 
-namespace UserManagement.Infrastructure.Persistence;
+namespace UserManagement.Persistence;
 
 public class UnitOfWork : IUnitOfWork
 {

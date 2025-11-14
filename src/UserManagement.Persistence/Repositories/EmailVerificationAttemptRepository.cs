@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using UserManagement.Application.Repositories;
 using UserManagement.Domain.Entities;
 
-namespace UserManagement.Infrastructure.Persistence.Repositories;
+namespace UserManagement.Persistence.Repositories;
 
 public class EmailVerificationAttemptRepository : IEmailVerificationAttemptRepository
 {

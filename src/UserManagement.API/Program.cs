@@ -14,8 +14,8 @@ using UserManagement.Domain.Entities;
 using UserManagement.Infrastructure.Authentication.Keys;
 using UserManagement.Infrastructure.Authentication.Repositories;
 using UserManagement.Infrastructure.Authentication.Tokens;
-using UserManagement.Infrastructure.Persistence;
-using UserManagement.Infrastructure.Persistence.Repositories;
+using UserManagement.Persistence;
+using UserManagement.Persistence.Repositories;
 
 namespace UserManagement.API;
 
