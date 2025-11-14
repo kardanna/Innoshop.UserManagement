@@ -33,6 +33,11 @@ public class UserService : IUserService
         _registrationPolicy = registrationPolicy;
     }
 
+    public async Task<bool> IsEmailAvailable(string email)
+    {
+        return await _userRepository.CountUsersWithEmailAsync(email) == 0;
+    }
+
     public async Task<Result<User>> LoginAsync(LoginContext context)
     {
         var attempt = await _loginPolicy.IsLoginAllowedAsync(context);

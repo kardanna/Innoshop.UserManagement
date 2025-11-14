@@ -6,6 +6,7 @@ namespace UserManagement.Application.Interfaces;
 
 public interface IUserService
 {
+    Task<bool> IsEmailAvailable(string email);
     Task<Result<User>> LoginAsync(LoginContext context);
     Task<Result<Guid>> RegisterAsync(RegistrationContext context);
     Task<Result<User>> GetUserAsync(Guid id);
