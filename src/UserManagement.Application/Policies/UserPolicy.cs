@@ -10,28 +10,37 @@ namespace UserManagement.Application.Policies;
 
 public class UserPolicy : IUserPolicy
 {
-    private readonly IUserRepository _repository;
-    private readonly RegistrationOptions _options;
+    private readonly IUserRepository _userRpository;
+    private readonly ILoginAttemptRepository _loginRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly RegistrationOptions _registrationOptions;
+    private readonly LoginOptions _loginOptions;
 
     public UserPolicy(
-        IUserRepository repository,
-        IOptions<RegistrationOptions> options)
+        IUserRepository userRpository,
+        ILoginAttemptRepository loginRepository,
+        IUnitOfWork unitOfWork,
+        IOptions<RegistrationOptions> registrationOptions,
+        IOptions<LoginOptions> loginOptions)
     {
-        _repository = repository;
-        _options = options.Value;
+        _userRpository = userRpository;
+        _loginRepository = loginRepository;
+        _unitOfWork = unitOfWork;
+        _registrationOptions = registrationOptions.Value;
+        _loginOptions = loginOptions.Value;
     }
 
     public async Task<PolicyResult> IsRegistrationAllowedAsync(RegistrationContext context)
     {
         var isOfLegalAge = context.DateOfBirth <
-            DateOnly.FromDateTime(DateTime.Now.AddYears(-_options.MustBeAtLeastYears));
+            DateOnly.FromDateTime(DateTime.Now.AddYears(-_registrationOptions.MustBeAtLeastYears));
 
         if (!isOfLegalAge)
         {
             return DomainErrors.Register.IllegalAge;
         }
 
-        var isEmailAvailable = await _repository.CountUsersWithEmailAsync(context.Email) == 0;
+        var isEmailAvailable = await _userRpository.CountUsersWithEmailAsync(context.Email) == 0;
 
         if (!isEmailAvailable)
         {
@@ -44,7 +53,7 @@ public class UserPolicy : IUserPolicy
     public async Task<PolicyResult> IsUpdateAllowedAsync(UpdateUserContext context)
     {
         var isOfLegalAge = context.DateOfBirth <
-            DateOnly.FromDateTime(DateTime.Now.AddYears(-_options.MustBeAtLeastYears));
+            DateOnly.FromDateTime(DateTime.Now.AddYears(-_registrationOptions.MustBeAtLeastYears));
 
         if (!isOfLegalAge)
         {
@@ -52,5 +61,27 @@ public class UserPolicy : IUserPolicy
         }
 
         return PolicyResult.Success;
+    }
+
+    public async Task<PolicyResult> IsLoginAllowedAsync(LoginContext context)
+    {
+        var numberOfAttempts = await _loginRepository
+            .CountLoginAttemptsAsync(context.Email, _loginOptions.LoginAttemptsTimeWindowInMinutes);
+
+        if (numberOfAttempts > _loginOptions.LoginAttemptsMaxCount)
+        {
+            return DomainErrors.Login.TooManyAttempts;
+        }
+
+        RegisterAttempt(context);
+
+        await _unitOfWork.SaveChangesAsync();
+        
+        return PolicyResult.Success;
+    }
+
+    private void RegisterAttempt(LoginContext context)
+    {
+        _loginRepository.AddAttempt(context.Email, context.DeviceFingerprint);
     }
 }

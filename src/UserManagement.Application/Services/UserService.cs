@@ -14,7 +14,6 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher<User> _hasher;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILoginPolicy _loginPolicy;
     private readonly IUserPolicy _userPolicy;
 
     public UserService(
@@ -22,14 +21,12 @@ public class UserService : IUserService
         IUserRepository userRepository,
         IPasswordHasher<User> hasher,
         IUnitOfWork unitOfWork,
-        ILoginPolicy loginPolicy,
         IUserPolicy userPolicy)
     {
         _emailService = emailService;
         _userRepository = userRepository;
         _hasher = hasher;
         _unitOfWork = unitOfWork;
-        _loginPolicy = loginPolicy;
         _userPolicy = userPolicy;
     }
 
@@ -40,7 +37,7 @@ public class UserService : IUserService
 
     public async Task<Result<User>> LoginAsync(LoginContext context)
     {
-        var attempt = await _loginPolicy.IsLoginAllowedAsync(context);
+        var attempt = await _userPolicy.IsLoginAllowedAsync(context);
 
         if (!attempt.IsAllowed)
         {

@@ -7,4 +7,5 @@ public interface IUserPolicy
 {
     Task<PolicyResult> IsRegistrationAllowedAsync(RegistrationContext context);
     Task<PolicyResult> IsUpdateAllowedAsync(UpdateUserContext context);
+    Task<PolicyResult> IsLoginAllowedAsync(LoginContext context);
 }

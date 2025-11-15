@@ -44,7 +44,6 @@ public class Program
         builder.Services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
         builder.Services.AddScoped<IEmailVerificationAttemptRepository, EmailVerificationAttemptRepository>();
         builder.Services.AddScoped<IUserPolicy, UserPolicy>();
-        builder.Services.AddScoped<ILoginPolicy, LoginPolicy>();
         builder.Services.AddScoped<IEmailPolicy, EmailPolicy>();
 
         builder.Services.AddSingleton<ISigningKeyCache, SigningKeysCache>();
