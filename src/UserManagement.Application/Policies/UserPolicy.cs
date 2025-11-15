@@ -8,12 +8,12 @@ using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.Policies;
 
-public class RegistrationPolicy : IRegistrationPolicy
+public class UserPolicy : IUserPolicy
 {
     private readonly IUserRepository _repository;
     private readonly RegistrationOptions _options;
 
-    public RegistrationPolicy(
+    public UserPolicy(
         IUserRepository repository,
         IOptions<RegistrationOptions> options)
     {
@@ -36,6 +36,19 @@ public class RegistrationPolicy : IRegistrationPolicy
         if (!isEmailAvailable)
         {
             return DomainErrors.Register.EmailAlreadyInUse;
+        }
+
+        return PolicyResult.Success;
+    }
+
+    public async Task<PolicyResult> IsUpdateAllowedAsync(UpdateUserContext context)
+    {
+        var isOfLegalAge = context.DateOfBirth <
+            DateOnly.FromDateTime(DateTime.Now.AddYears(-_options.MustBeAtLeastYears));
+
+        if (!isOfLegalAge)
+        {
+            return DomainErrors.Register.IllegalAge;
         }
 
         return PolicyResult.Success;

@@ -3,7 +3,8 @@ using UserManagement.Application.Models;
 
 namespace UserManagement.Application.Interfaces;
 
-public interface IRegistrationPolicy
+public interface IUserPolicy
 {
     Task<PolicyResult> IsRegistrationAllowedAsync(RegistrationContext context);
+    Task<PolicyResult> IsUpdateAllowedAsync(UpdateUserContext context);
 }

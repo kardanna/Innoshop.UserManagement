@@ -15,7 +15,7 @@ public class UserService : IUserService
     private readonly IPasswordHasher<User> _hasher;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILoginPolicy _loginPolicy;
-    private readonly IRegistrationPolicy _registrationPolicy;
+    private readonly IUserPolicy _userPolicy;
 
     public UserService(
         IEmailService emailService,
@@ -23,14 +23,14 @@ public class UserService : IUserService
         IPasswordHasher<User> hasher,
         IUnitOfWork unitOfWork,
         ILoginPolicy loginPolicy,
-        IRegistrationPolicy registrationPolicy)
+        IUserPolicy userPolicy)
     {
         _emailService = emailService;
         _userRepository = userRepository;
         _hasher = hasher;
         _unitOfWork = unitOfWork;
         _loginPolicy = loginPolicy;
-        _registrationPolicy = registrationPolicy;
+        _userPolicy = userPolicy;
     }
 
     public async Task<bool> IsEmailAvailable(string email)
@@ -73,7 +73,7 @@ public class UserService : IUserService
 
     public async Task<Result<Guid>> RegisterAsync(RegistrationContext context)
     {
-        var attempt = await _registrationPolicy.IsRegistrationAllowedAsync(context);
+        var attempt = await _userPolicy.IsRegistrationAllowedAsync(context);
 
         if (!attempt.IsAllowed)
         {
@@ -104,5 +104,24 @@ public class UserService : IUserService
         if (user == null) return DomainErrors.User.NotFound;
 
         return Result.Success(user);
+    }
+
+    public async Task<Result<User>> UpdateUserAsync(UpdateUserContext context)
+    {
+        var user = await GetUserAsync(context.UserId);
+
+        if (user.IsFailure) return user.Error;
+
+        var attempt = await _userPolicy.IsUpdateAllowedAsync(context);
+
+        if (attempt.IsDenied) return attempt.Error;
+
+        user.Value.FirstName = context.FirstName;
+        user.Value.LastName = context.LastName;
+        user.Value.DateOfBirth = context.DateOfBirth;
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return user;
     }
 }

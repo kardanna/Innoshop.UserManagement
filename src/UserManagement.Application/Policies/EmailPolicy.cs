@@ -12,16 +12,16 @@ namespace UserManagement.Application.Policies;
 public class EmailPolicy : IEmailPolicy
 {
     private readonly EmailOptions _options;
-    private readonly IUserService _userService;
+    private readonly IUserRepository _userRepository;
     private readonly IEmailVerificationAttemptRepository _emailVerificationAttemptRepository;
 
     public EmailPolicy(
         IOptions<EmailOptions> options,
-        IUserService userService,
+        IUserRepository userRepository,
         IEmailVerificationAttemptRepository emailVerificationAttemptRepository)
     {
         _options = options.Value;
-        _userService = userService;
+        _userRepository = userRepository;
         _emailVerificationAttemptRepository = emailVerificationAttemptRepository;
     }
 
@@ -35,7 +35,7 @@ public class EmailPolicy : IEmailPolicy
 
         if (attempt.PreviousEmail == null) return PolicyResult.Success; //means it's not a change but initial confirmation
 
-        var isEmailStillAvailable = await _userService.IsEmailAvailable(attempt.Email);
+        var isEmailStillAvailable = await _userRepository.CountUsersWithEmailAsync(attempt.Email) == 0;
 
         if (!isEmailStillAvailable) return DomainErrors.EmailChange.EmailAlreadyInUse;
 
@@ -48,7 +48,7 @@ public class EmailPolicy : IEmailPolicy
 
         if (isTheSameEmail) return DomainErrors.EmailChange.TheSameEmail;
 
-        var isEmailAvailable = await _userService.IsEmailAvailable(context.NewEmail);
+        var isEmailAvailable = await _userRepository.CountUsersWithEmailAsync(context.NewEmail) == 0;
 
         if (!isEmailAvailable) return DomainErrors.EmailChange.EmailAlreadyInUse;
 

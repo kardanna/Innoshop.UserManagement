@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using UserManagement.API.DTOs;
 using UserManagement.Application.Users.Get;
 using UserManagement.Application.Users.Registration;
+using UserManagement.Application.Users.Update;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
@@ -28,11 +29,6 @@ public class UserController : BaseApiController
     [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
     public async Task<IActionResult> Get()
     {
-        foreach(var claim in HttpContext.User.Claims)
-        {
-            Console.WriteLine($"type : {claim.Type}, value: {claim.Value}");
-        }
-
         var id = HttpContext.User.Claims
             .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
             ?.Value;
@@ -86,5 +82,32 @@ public class UserController : BaseApiController
         if (response.IsFailure) return HandleFailure(response);
 
         return Ok(response.Value);
+    }
+
+    [HttpPost("me")]
+    [Authorize(Roles = nameof(Role.Customer))]
+    public async Task<IActionResult> Post([FromBody] UpdateUserRequest request)
+    {
+        var id = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
+            ?.Value;
+        
+        if (id == null || !Guid.TryParse(id, out var guid))
+        {
+            return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
+        }
+
+        var command = new UpdateUserCommand(
+            guid,
+            request.FirstName,
+            request.LastName,
+            request.DateOfBirth
+        );
+
+        var response = await _sender.Send(command);
+
+        if (response.IsFailure) return HandleFailure(response);
+
+        return Ok(response);
     }
 }

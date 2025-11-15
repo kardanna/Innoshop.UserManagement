@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.API.Behaviours;
+using UserManagement.API.ExceptionHandlers;
 using UserManagement.API.OptionsSetup;
 using UserManagement.Application.Interfaces;
 using UserManagement.Application.Policies;
@@ -42,7 +43,7 @@ public class Program
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
         builder.Services.AddScoped<IEmailVerificationAttemptRepository, EmailVerificationAttemptRepository>();
-        builder.Services.AddScoped<IRegistrationPolicy, RegistrationPolicy>();
+        builder.Services.AddScoped<IUserPolicy, UserPolicy>();
         builder.Services.AddScoped<ILoginPolicy, LoginPolicy>();
         builder.Services.AddScoped<IEmailPolicy, EmailPolicy>();
 
@@ -72,7 +73,7 @@ public class Program
         builder.Services.AddDataProtection()
             .SetApplicationName("Inno_Shop.UserManagement");
 
-
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 
 
@@ -90,6 +91,8 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+
+        app.UseExceptionHandler(options => { });
 
         app.UseAuthentication();
         app.UseAuthorization();

@@ -2,9 +2,9 @@ using FluentValidation;
 
 namespace UserManagement.Application.Users.Registration;
 
-public class UserLoginCommandValidator : AbstractValidator<RegisterUserCommand>
+public class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
 {
-    public UserLoginCommandValidator()
+    public RegisterUserCommandValidator()
     {
         RuleFor(c => c.FirstName)
             .NotEmpty()
