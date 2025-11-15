@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.Domain.Shared;
 
@@ -22,11 +21,11 @@ public class BaseApiController : ControllerBase
             { IsSuccess: true }
                 => throw new InvalidOperationException("Can not handle success result."),
 
-            ValidationResult vr
+            IValidationResult vr
                 => BadRequest(ToProblemDetails(
                     "Validation Error",
                     StatusCodes.Status400BadRequest,
-                    vr.Error,
+                    result.Error,
                     vr.Errors)),
 
             _ => BadRequest(ToProblemDetails(
@@ -48,7 +47,7 @@ public class BaseApiController : ControllerBase
             Title = title,
             Status = status,
             Type = error.Code,
-            Detail = error.Description,
+            Detail = error.Description
         };
 
         if (errors != null)

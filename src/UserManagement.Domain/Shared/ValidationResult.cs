@@ -1,10 +1,10 @@
 namespace UserManagement.Domain.Shared;
 
-public class ValidationResult : Result
+public class ValidationResult : Result, IValidationResult
 {
     public static ValidationResult WithErrors(Error[] errors) => new(errors);
 
-    public Error[] Errors { get; init; }
+    public Error[] Errors { get; }
 
     private ValidationResult(Error[] errors)
         : base(false, Error.ValidationError)
@@ -13,7 +13,7 @@ public class ValidationResult : Result
     }
 }
 
-public class ValidationResult<T> : Result<T>
+public class ValidationResult<T> : Result<T>, IValidationResult
 {
     public static ValidationResult<T> WithErrors(Error[] errors) => new(errors);
 
