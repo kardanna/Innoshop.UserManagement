@@ -45,6 +45,8 @@ public class TokenProvider : ITokenProvider
             .ToList();
 
         claims.Add(new(JwtRegisteredClaimNames.Sub, user.Id.ToString()));
+        claims.Add(new(ClaimTypes.Name, user.FirstName));
+        claims.Add(new(ClaimTypes.Surname, user.LastName));
         claims.Add(new(JwtRegisteredClaimNames.Email, user.Email));
         claims.Add(new(JwtRegisteredClaimNames.Jti, tokenRecord.AccessTokenId.ToString()));
 
@@ -87,11 +89,12 @@ public class TokenProvider : ITokenProvider
             return DomainErrors.RefreshToken.Expired;
         }
 
+        //if signing key generation is required this operation will be persisted before generating a new token;
+        _tokenRepository.Revome(tokenRecord.AccessTokenId); 
+
         var newToken = await GenerateFromLogin(tokenRecord.User);
         //if old access! token has not yet expired - post a message saying it's invalid!!!!!!!!!!!!
         //and to own redis
-        _tokenRepository.Revome(tokenRecord.AccessTokenId);
-        await _unitOfWork.SaveChangesAsync();
 
         return newToken;
     }

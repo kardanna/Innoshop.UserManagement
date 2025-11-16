@@ -1,10 +1,12 @@
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using UserManagement.Application.Interfaces;
 using UserManagement.Domain.Entities;
 using UserManagement.Infrastructure.Authentication.Configuration;
+using UserManagement.Infrastructure.Authentication.Exceptions;
 using UserManagement.Infrastructure.Authentication.Repositories;
 
 namespace UserManagement.Infrastructure.Authentication.Keys;
@@ -17,31 +19,43 @@ public class SigningKeyProvider : ISigningKeyProvider
     private readonly SigningKeyOptions _options;
     private readonly IDataProtector _protector;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<SigningKeyProvider> _logger;
 
     public SigningKeyProvider(
         ISigningKeyCache cache,
         ISigningKeyRecordRepository repository,
         IOptions<SigningKeyOptions> options,
         IDataProtectionProvider protector,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ILogger<SigningKeyProvider> logger)
     {
         _cache = cache;
         _repository = repository;
         _options = options.Value;
         _protector = protector.CreateProtector(PROTECTOR_NAME);
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task InitializeSigningKeysCacheAsync()
     {
         if (_cache.IsEmpty)
         {
+            _logger.LogInformation("Initializing signing key in-memory cache");
+
             var records = await _repository
                 .GetValidSigningKeysAsync(_options.ValidationKeyLifetimeDays);
+
             foreach (var record in records)
             {
-                _cache.TryAddKey(SigningKeyFromRecord(record));
+                if(!_cache.TryAddKey(SigningKeyFromRecord(record)))
+                {
+                    _logger.LogCritical("Unable to add signing key record '{SigningKeyRecordId}' to the in-memory cache", record.Id);
+                    Environment.FailFast($"Unable to add signing key record '{record.Id}' to the in-memory cache");
+                }
             }
+
+            _logger.LogInformation("All valid keys successfuly added to the in-memory cache");
         }
     }
 
@@ -63,17 +77,31 @@ public class SigningKeyProvider : ISigningKeyProvider
             key = _cache.GetKeyForSigning();
             if (key != null) return key;
 
+            _logger.LogInformation("Valid signing key not found. Generating a new one...");
+
             var (keyPair, keyPairRecord) = CreateSigningKey();
+
+            _logger.LogInformation("Generated a new key pair with ID '{KeyId}'. Persisting...", keyPair.Id);
 
             _repository.Add(keyPairRecord);
 
             if (_cache.TryAddKey(keyPair))
             {
-                await _unitOfWork.SaveChangesAsync();
-                return keyPair.PrivateKey;
+                try
+                {
+                    await _unitOfWork.SaveChangesAsync();
+                    return keyPair.PrivateKey;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogCritical(ex, "Failed to persist new key to a database. Aborting...");
+                    Environment.FailFast("Failed to persist new key to a database. Aborting...", ex);
+                }
             }
 
-            throw new Exception("Unable to generate signing key"); //!!!!!!!!!!!!!!!!!!    
+            //Inform somebody if fails to often????
+
+            throw new KeyGenerationException("Unable to add new signing key to a cache");
         }
         finally
         {

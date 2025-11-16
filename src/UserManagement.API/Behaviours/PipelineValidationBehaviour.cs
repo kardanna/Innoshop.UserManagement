@@ -10,11 +10,14 @@ public class PipelineValidationBehaviour<TRequest, TResponse>
     where TResponse : Result
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
+    private readonly ILogger<PipelineValidationBehaviour<TRequest, TResponse>> _logger;
 
     public PipelineValidationBehaviour(
-        IEnumerable<IValidator<TRequest>> validators)
+        IEnumerable<IValidator<TRequest>> validators,
+        ILogger<PipelineValidationBehaviour<TRequest, TResponse>> logger)
     {
         _validators = validators;
+        _logger = logger;
     }
 
     public async Task<TResponse> Handle(
@@ -35,22 +38,24 @@ public class PipelineValidationBehaviour<TRequest, TResponse>
                 vf.ErrorCode,
                 vf.ErrorMessage))
             .DistinctBy(e => new { e.Code, e.Description })
-            .ToArray();
+            .ToList();
 
-        if (errors.Length == 0)
+        if (errors.Count == 0)
         {
             return await next();
         }
+        
+        _logger.LogError("A validation problem has occurred : {@Errors}", errors);
 
         return ToValidationResult<TResponse>(errors);
     }
 
-    private static T ToValidationResult<T>(Error[] errors)
+    private static T ToValidationResult<T>(IEnumerable<Error> errors)
         where T : Result
     {
         if (typeof(T) == typeof(Result))
         {
-            return (ValidationResult.WithErrors(errors) as T)!;
+            return (ValidationResult.WithErrors(errors.ToArray()) as T)!;
         }
 
         object result = typeof(ValidationResult<>)
@@ -58,7 +63,7 @@ public class PipelineValidationBehaviour<TRequest, TResponse>
             .MakeGenericType(typeof(T)
                 .GenericTypeArguments[0])
             .GetMethod(nameof(ValidationResult.WithErrors))!
-            .Invoke(null, new object?[] { errors })!;
+            .Invoke(null, new object?[] { errors.ToArray() })!;
 
         return (T)result;
     }

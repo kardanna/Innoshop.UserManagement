@@ -8,15 +8,6 @@ public class SigningKeysCache : ISigningKeyCache
     private readonly ConcurrentDictionary<Guid, SigningKey> _cache = new();
     public SemaphoreSlim KeyGenerationSemaphore { get; } = new(1, 1);
 
-    public SigningKey? GetKeyPair(Guid id) //Remove
-    {
-        if (_cache.TryGetValue(id, out var keyPair))
-        {
-            return keyPair;
-        }
-        return null;
-    }
-
     public IEnumerable<RsaSecurityKey> GetUnexpiredValidationKeys()
     {
         return _cache
@@ -39,9 +30,16 @@ public class SigningKeysCache : ISigningKeyCache
         return _cache.TryAdd(key.Id, key);
     }
 
-    public bool TryRemoveKey(Guid id)
+    public void RemoveExpiredKeys()
     {
-        return _cache.TryRemove(id, out _);
+        var expiredKeysIds = _cache.Values
+            .Where(k => k.ExpiresAt < DateTime.UtcNow)
+            .Select(k => k.Id);
+
+        foreach (var keyId in expiredKeysIds)
+        {
+            _cache.Remove(keyId, out var key);
+        }
     }
 
     public bool IsEmpty => _cache.IsEmpty;

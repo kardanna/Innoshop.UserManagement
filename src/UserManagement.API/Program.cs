@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using UserManagement.API.Behaviours;
 using UserManagement.API.ExceptionHandlers;
 using UserManagement.API.OptionsSetup;
@@ -74,7 +75,10 @@ public class Program
 
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-
+        builder.Host.UseSerilog((context, loggerConfig) =>
+        {
+            loggerConfig.ReadFrom.Configuration(context.Configuration);
+        });
 
         builder.Services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(UserManagement.Application.AssemblyReference.Assembly));
@@ -90,6 +94,8 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+
+        app.UseSerilogRequestLogging();
 
         app.UseExceptionHandler(options => { });
 
