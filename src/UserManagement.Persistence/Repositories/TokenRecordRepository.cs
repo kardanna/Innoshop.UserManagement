@@ -16,6 +16,14 @@ public class TokenRecordRepository : ITokenRecordRepository
     {
         _appContext.TokenRecords.Add(record);
     }
+
+    public async Task<IEnumerable<TokenRecord>> GetAllAsync(Guid userId)
+    {
+        return await _appContext.TokenRecords
+            .Where(r => r.UserId == userId)
+            .ToListAsync();
+    }
+
     public async Task<TokenRecord?> GetAsync(Guid accessTokenId)
     {
         return await _appContext.TokenRecords

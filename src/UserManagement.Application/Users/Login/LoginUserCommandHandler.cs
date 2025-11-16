@@ -24,7 +24,7 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, LoginUs
 
         if (user.IsFailure) return user.Error;
 
-        var response = await _tokenService.GenerateFromLogin(user.Value);
+        var response = await _tokenService.GenerateFromLoginAsync(user.Value, request.DeviceFingerprint);
 
         return response;
     }

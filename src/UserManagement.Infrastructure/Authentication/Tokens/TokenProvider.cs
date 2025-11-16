@@ -20,24 +20,27 @@ public class TokenProvider : ITokenProvider
     private readonly ISigningKeyProvider _signingKeyProvider;
     private readonly IUnitOfWork _unitOfWork;
     private readonly JwtOptions _jwtOptions;
+    private readonly IInnoshopNotifier _innoshopNotifier;
 
     public TokenProvider(
         ITokenRecordRepository tokenRepository,
         ISigningKeyProvider signingKeyProvider,
         IUnitOfWork unitOfWork,
-        IOptions<JwtOptions> jwtOptions)
+        IOptions<JwtOptions> jwtOptions,
+        IInnoshopNotifier innoshopNotifier)
     {
         _tokenRepository = tokenRepository;
         _signingKeyProvider = signingKeyProvider;
         _unitOfWork = unitOfWork;
         _jwtOptions = jwtOptions.Value;
+        _innoshopNotifier = innoshopNotifier;
     }
 
-    public async Task<Result<LoginUserResponse>> GenerateFromLogin(User user)
+    public async Task<Result<LoginUserResponse>> GenerateFromLoginAsync(User user, string deviceFingerprint)
     {
         var signingKey = await _signingKeyProvider.GetSigningKeyAsync();
 
-        var tokenRecord = CreateTokenRecord(user);
+        var tokenRecord = CreateTokenRecord(user, deviceFingerprint);
 
         List<Claim> claims = user.Roles
             .DistinctBy(c => c.Name)
@@ -74,7 +77,7 @@ public class TokenProvider : ITokenProvider
         );
     }
 
-    public async Task<Result<LoginUserResponse>> GenerateFromRefreshToken(string refreshToken)
+    public async Task<Result<LoginUserResponse>> GenerateFromRefreshTokenAsync(string refreshToken)
     {
         var tokenRecord = await _tokenRepository.GetAsync(refreshToken);
 
@@ -92,20 +95,21 @@ public class TokenProvider : ITokenProvider
         //if signing key generation is required this operation will be persisted before generating a new token;
         _tokenRepository.Revome(tokenRecord.AccessTokenId); 
 
-        var newToken = await GenerateFromLogin(tokenRecord.User);
+        var newToken = await GenerateFromLoginAsync(tokenRecord.User, tokenRecord.DeviceFingerprint);
         //if old access! token has not yet expired - post a message saying it's invalid!!!!!!!!!!!!
         //and to own redis
 
         return newToken;
     }
 
-    private TokenRecord CreateTokenRecord(User user)
+    private TokenRecord CreateTokenRecord(User user, string fingerprint)
     {
         var tokenRecord = new TokenRecord(
             accessTokenId: Guid.CreateVersion7(),
             accessTokenLifetime: TimeSpan.FromMinutes(_jwtOptions.AccessTokenLifetimeMinutes),
             userId: user.Id,
-            refreshToken: GenerateRefreshToken()
+            refreshToken: GenerateRefreshToken(),
+            deviceFingerprint: fingerprint
         );
 
         _tokenRepository.Add(tokenRecord);
@@ -119,5 +123,35 @@ public class TokenProvider : ITokenProvider
         using var generator = RandomNumberGenerator.Create();
         generator.GetBytes(randomNumber);
         return Convert.ToBase64String(randomNumber);
+    }
+
+    public async Task<Result> RevokeTokenAsync(Guid tokenId)
+    {
+        var token = await _tokenRepository.GetAsync(tokenId);
+
+        if (token == null) return Result.Failure(DomainErrors.Authentication.AccessTokenNotFound);
+
+        _tokenRepository.Revome(tokenId);
+
+        await _innoshopNotifier.SendTokenRevokedNotificationAsync(tokenId, token.AccessTokenExpiresAt);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result.Success();
+    }
+
+    public async Task<Result> RevokeAllTokensAsync(Guid userId)
+    {
+        var tokens = await _tokenRepository.GetAllAsync(userId);
+
+        foreach (var token in tokens)
+        {
+            _tokenRepository.Revome(token.AccessTokenId);
+            await _innoshopNotifier.SendTokenRevokedNotificationAsync(token.AccessTokenId, token.AccessTokenExpiresAt);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result.Success();
     }
 }

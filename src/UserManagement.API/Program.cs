@@ -47,6 +47,8 @@ public class Program
         builder.Services.AddScoped<IUserPolicy, UserPolicy>();
         builder.Services.AddScoped<IEmailPolicy, EmailPolicy>();
 
+        builder.Services.AddScoped<IInnoshopNotifier, InnoshopNotifier>();//Scoped?
+
         builder.Services.AddSingleton<ISigningKeyCache, SigningKeysCache>();
         builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 

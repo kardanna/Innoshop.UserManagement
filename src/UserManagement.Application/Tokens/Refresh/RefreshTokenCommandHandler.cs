@@ -16,6 +16,6 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, L
 
     public async Task<Result<LoginUserResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        return await _tokenService.GenerateFromRefreshToken(request.RefreshToken);
+        return await _tokenService.GenerateFromRefreshTokenAsync(request.RefreshToken);
     }
 }

@@ -9,7 +9,7 @@ public class TokenRecord
     public Guid UserId { get; set; }
     public virtual User User { get; set; } = null!;
     public string RefreshToken { get; set; } = null!;
-    public string? DeviceFingerprint { get; set; }
+    public string DeviceFingerprint { get; set; } = null!;
 
     public TokenRecord() { }
 
@@ -18,7 +18,7 @@ public class TokenRecord
         TimeSpan accessTokenLifetime,
         Guid userId,
         string refreshToken,
-        string? deviceFingerprint = null)
+        string deviceFingerprint)
     {
         AccessTokenId = accessTokenId;
         IssuedAt = DateTime.UtcNow;

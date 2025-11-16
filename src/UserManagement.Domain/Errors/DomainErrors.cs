@@ -18,6 +18,17 @@ public static class DomainErrors
             "Authentication.InvalidSubjectClaim",
             "Token has no subject claim or claim value is invalid."
         );
+
+        public static readonly Error InvalidJwtIdClaim = new(
+            "Authentication.InvalidJwtIdClaim",
+            "Token has no token ID claim or claim value is invalid."
+        );
+
+
+        public static readonly Error AccessTokenNotFound = new(
+            "Authentication.AccessTokenNotFound",
+            "Requested access token not found."
+        );
     }
 
     public static class Register
