@@ -30,6 +30,7 @@ public class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, GetUs
             user.Value.DateOfBirth,
             user.Value.Email,
             user.Value.Roles.Select(r => r.Name),
+            user.Value.IsEmailVerified,
             user.Value.IsDeactivated
         );
 

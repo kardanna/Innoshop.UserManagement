@@ -33,4 +33,9 @@ public class UserRepository : IUserRepository
             .Where(u => u.Email == email)
             .CountAsync();
     }
+
+    public void Add(User user)
+    {
+        _appContext.Users.Add(user);
+    }
 }

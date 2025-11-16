@@ -1,8 +1,9 @@
 using UserManagement.Application.Messaging;
+using UserManagement.Application.Users.Get;
 
 namespace UserManagement.Application.Users.Registration;
 
-public class RegisterUserCommand : ICommand<Guid>
+public class RegisterUserCommand : ICommand<GetUserResponse>
 {
     public string FirstName { get; init; }
     public string LastName { get; init; }

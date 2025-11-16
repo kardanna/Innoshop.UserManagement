@@ -7,4 +7,5 @@ public interface IUserRepository
     Task<User?> GetAsync(Guid id);
     Task<User?> GetAsync(string email);
     Task<int> CountUsersWithEmailAsync(string email);
+    void Add(User user);
 }

@@ -27,7 +27,7 @@ public class UserController : BaseApiController
 
     [HttpGet("me")]
     [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> GetMe()
     {
         var id = HttpContext.User.Claims
             .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
@@ -49,7 +49,7 @@ public class UserController : BaseApiController
 
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "Administrator")]
-    public async Task<IActionResult> Get(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var requesterId = HttpContext.User.Claims
             .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
@@ -81,7 +81,7 @@ public class UserController : BaseApiController
 
         if (response.IsFailure) return HandleFailure(response);
 
-        return Ok(response.Value);
+        return CreatedAtAction(nameof(GetById), new { id = response.Value.id } , response.Value);
     }
 
     [HttpPost("me")]

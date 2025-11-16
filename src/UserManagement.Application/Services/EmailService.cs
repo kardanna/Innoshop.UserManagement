@@ -38,6 +38,8 @@ public class EmailService : IEmailService
         _repository.Add(attempt);
 
         //await _emailSender.SendVerificationEmail(attempt.Email, attempt.AttemptCode);
+
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<Result> SendRequestToChangeUserEmailAsync(EmailChangeContext context)

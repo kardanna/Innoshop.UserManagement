@@ -10,7 +10,6 @@ namespace UserManagement.Application.Services;
 
 public class UserService : IUserService
 {
-    private readonly IEmailService _emailService;
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher<User> _hasher;
     private readonly IUnitOfWork _unitOfWork;
@@ -23,16 +22,10 @@ public class UserService : IUserService
         IUnitOfWork unitOfWork,
         IUserPolicy userPolicy)
     {
-        _emailService = emailService;
         _userRepository = userRepository;
         _hasher = hasher;
         _unitOfWork = unitOfWork;
         _userPolicy = userPolicy;
-    }
-
-    public async Task<bool> IsEmailAvailable(string email)
-    {
-        return await _userRepository.CountUsersWithEmailAsync(email) == 0;
     }
 
     public async Task<Result<User>> LoginAsync(LoginContext context)
@@ -63,12 +56,10 @@ public class UserService : IUserService
             return DomainErrors.Login.EmailUnverified;
         }
 
-        //await _unitOfWork.SaveChangesAsync();
-
         return user;
     }
 
-    public async Task<Result<Guid>> RegisterAsync(RegistrationContext context)
+    public async Task<Result<User>> RegisterAsync(RegistrationContext context)
     {
         var attempt = await _userPolicy.IsRegistrationAllowedAsync(context);
 
@@ -87,11 +78,11 @@ public class UserService : IUserService
             Roles = []
         };
 
-        await _emailService.SendRequestToVerifyUserEmailAsync(user);
+        _userRepository.Add(user);
 
-        await _unitOfWork.SaveChangesAsync();
+        //Save is performed inside Email service after sending verification email 
 
-        return user.Id;
+        return user;
     }
 
     public async Task<Result<User>> GetUserAsync(Guid id)

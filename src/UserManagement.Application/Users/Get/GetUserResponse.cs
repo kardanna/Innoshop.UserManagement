@@ -7,5 +7,6 @@ public record GetUserResponse(
     DateOnly DateOfBirth,
     string Email,
     IEnumerable<string> Roles,
+    bool IsEmailVerified,
     bool IsDeactivated
 );

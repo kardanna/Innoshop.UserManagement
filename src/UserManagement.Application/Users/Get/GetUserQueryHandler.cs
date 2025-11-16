@@ -28,6 +28,7 @@ public class GetUserQueryHandler : IQueryHandler<GetUserQuery, GetUserResponse>
             user.Value.DateOfBirth,
             user.Value.Email,
             user.Value.Roles.Select(r => r.Name),
+            user.Value.IsEmailVerified,
             user.Value.IsDeactivated
         );
 
