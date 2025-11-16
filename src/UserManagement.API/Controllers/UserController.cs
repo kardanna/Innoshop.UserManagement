@@ -67,7 +67,7 @@ public class UserController : BaseApiController
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Post([FromBody] RegisterUserRequest request)
+    public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
         var command = new RegisterUserCommand(
             request.FirstName,
@@ -84,9 +84,9 @@ public class UserController : BaseApiController
         return CreatedAtAction(nameof(GetById), new { id = response.Value.id } , response.Value);
     }
 
-    [HttpPost("me")]
+    [HttpPut("me")]
     [Authorize(Roles = nameof(Role.Customer))]
-    public async Task<IActionResult> Post([FromBody] UpdateUserRequest request)
+    public async Task<IActionResult> Update([FromBody] UpdateUserRequest request)
     {
         var id = HttpContext.User.Claims
             .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
@@ -108,6 +108,6 @@ public class UserController : BaseApiController
 
         if (response.IsFailure) return HandleFailure(response);
 
-        return Ok(response);
+        return Ok(response.Value);
     }
 }
