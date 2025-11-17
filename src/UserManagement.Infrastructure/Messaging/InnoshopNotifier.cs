@@ -1,5 +1,5 @@
+using Innoshop.Contracts.UserManagement;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using UserManagement.Application.Interfaces;
 
@@ -20,18 +20,23 @@ public class InnoshopNotifier : IInnoshopNotifier
         _channel = connection.Channel;
     }
 
-    public async Task SendTokenRevokedNotificationAsync(Guid tokenId, DateTime tokenExpiresAtUtc)
+    public async Task SendTokenRevokedNotificationAsync(TokenRevokedMessage message)
     {
-        Console.WriteLine($"Sent notification of revoking access token with ID '{tokenId}' that expires at {tokenExpiresAtUtc}");
+        Console.WriteLine($"Sent notification of revoking access token with ID '{message.TokenId}' that expires at {message.TokenExpiresAtUtc}");
         //throw new NotImplementedException();
     }
 
-    public async Task SendUserDeactivatedNotificationAsync(Guid userId)
+    public async Task SendUserDeactivatedNotificationAsync(UserDeactivatedMessage message)
     {
         //throw new NotImplementedException();
     }
 
-    public async Task SendUserDeletedNotificationAsync(Guid userId)
+    public async Task SendUserDeletedNotificationAsync(UserDeletedMessage message)
+    {
+        //throw new NotImplementedException();
+    }
+
+    public async Task SendUserReactivatedNotificationAsync(UserReactivatedMessage message)
     {
         //throw new NotImplementedException();
     }

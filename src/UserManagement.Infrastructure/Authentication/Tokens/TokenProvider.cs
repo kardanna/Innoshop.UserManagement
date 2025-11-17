@@ -133,7 +133,7 @@ public class TokenProvider : ITokenProvider
 
         _tokenRepository.Revome(tokenId);
 
-        await _innoshopNotifier.SendTokenRevokedNotificationAsync(tokenId, token.AccessTokenExpiresAt);
+        await _innoshopNotifier.SendTokenRevokedNotificationAsync(new() {TokenId = tokenId, TokenExpiresAtUtc = token.AccessTokenExpiresAt});
 
         await _unitOfWork.SaveChangesAsync();
 
@@ -147,7 +147,7 @@ public class TokenProvider : ITokenProvider
         foreach (var token in tokens)
         {
             _tokenRepository.Revome(token.AccessTokenId);
-            await _innoshopNotifier.SendTokenRevokedNotificationAsync(token.AccessTokenId, token.AccessTokenExpiresAt);
+            await _innoshopNotifier.SendTokenRevokedNotificationAsync(new() {TokenId = token.AccessTokenId, TokenExpiresAtUtc = token.AccessTokenExpiresAt});
         }
 
         await _unitOfWork.SaveChangesAsync();
