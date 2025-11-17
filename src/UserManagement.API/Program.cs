@@ -35,7 +35,16 @@ public class Program
         //Database
         builder.Services.AddDbContext<ApplicationContext>(options =>
         {
-            options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
+            options.UseSqlServer(
+                builder.Configuration.GetConnectionString("SqlServer"),
+                contextOptions =>
+                {
+                    contextOptions.EnableRetryOnFailure(
+                        maxRetryCount: 10,
+                        maxRetryDelay: TimeSpan.FromSeconds(5),
+                        errorNumbersToAdd: null
+                    );
+                });
         });
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
