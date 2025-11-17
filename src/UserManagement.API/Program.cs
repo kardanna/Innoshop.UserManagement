@@ -16,6 +16,7 @@ using UserManagement.Domain.Entities;
 using UserManagement.Infrastructure.Authentication.Keys;
 using UserManagement.Infrastructure.Authentication.Repositories;
 using UserManagement.Infrastructure.Authentication.Tokens;
+using UserManagement.Infrastructure.Messaging;
 using UserManagement.Persistence;
 using UserManagement.Persistence.Repositories;
 
@@ -27,18 +28,18 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-
         builder.Services.AddControllers();
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+        
         builder.Services.AddOpenApi();
 
+        //Database
         builder.Services.AddDbContext<ApplicationContext>(options =>
         {
             options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
         });
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+        //Scoped
         builder.Services.AddScoped<ISigningKeyRecordRepository, SigningKeyRecordsRepository>();
         builder.Services.AddScoped<ITokenRecordRepository, TokenRecordRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -47,47 +48,62 @@ public class Program
         builder.Services.AddScoped<IUserPolicy, UserPolicy>();
         builder.Services.AddScoped<IEmailPolicy, EmailPolicy>();
 
-        builder.Services.AddScoped<IInnoshopNotifier, InnoshopNotifier>();//Scoped?
-
+        //Singletons
         builder.Services.AddSingleton<ISigningKeyCache, SigningKeysCache>();
         builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
+        //Scoped services
         builder.Services.AddScoped<ISigningKeyProvider, SigningKeyProvider>();
         builder.Services.AddScoped<ITokenProvider, TokenProvider>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
 
+        //Configuring options
         builder.Services.ConfigureOptions<JwtOptionsSetup>();
         builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
         builder.Services.ConfigureOptions<SigningKeyOptionsSetup>();
         builder.Services.ConfigureOptions<LoginOptionsSetup>();
         builder.Services.ConfigureOptions<RegistrationOptionsSetup>();
         builder.Services.ConfigureOptions<EmailOptionsSetup>();
+        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
 
+        //Hosted services
+        builder.Services.AddHostedService<SigningKeyCacheInitializer>();
+
+        //RabbitMQ
+        builder.Services.AddSingleton<RabbitMQConnection>();
+        builder.Services.AddHostedService<RabbitMQConnectionInitializer>();
+        builder.Services.AddSingleton<IInnoshopNotifier, InnoshopNotifier>();
+
+        //Authentication configuration
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme);
 
-
+        //Validation behaviour
         builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PipelineValidationBehaviour<,>));
         builder.Services.AddValidatorsFromAssembly(UserManagement.Application.AssemblyReference.Assembly,
             includeInternalTypes: true);
         
+        //Data protection configuration
         builder.Services.AddDataProtection()
-            .SetApplicationName("Inno_Shop.UserManagement");
+            .SetApplicationName("Innoshop.UserManagement");
 
+        //Global exception handler
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+        //Logging
         builder.Host.UseSerilog((context, loggerConfig) =>
         {
             loggerConfig.ReadFrom.Configuration(context.Configuration);
         });
 
+        //MediatR
         builder.Services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(UserManagement.Application.AssemblyReference.Assembly));
+        
 
         var app = builder.Build();
 
-        await InitializeSigningKeysCache(app);
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -104,18 +120,8 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-
         app.MapControllers();
 
         app.Run();
-    }
-    
-    private static async Task InitializeSigningKeysCache(WebApplication app)
-    {
-        using (var scope = app.Services.CreateScope())
-        {
-            var service = scope.ServiceProvider.GetRequiredService<ISigningKeyProvider>();
-            await service.InitializeSigningKeysCacheAsync();
-        }
     }
 }

@@ -37,28 +37,6 @@ public class SigningKeyProvider : ISigningKeyProvider
         _logger = logger;
     }
 
-    public async Task InitializeSigningKeysCacheAsync()
-    {
-        if (_cache.IsEmpty)
-        {
-            _logger.LogInformation("Initializing signing key in-memory cache");
-
-            var records = await _repository
-                .GetValidSigningKeysAsync(_options.ValidationKeyLifetimeDays);
-
-            foreach (var record in records)
-            {
-                if(!_cache.TryAddKey(SigningKeyFromRecord(record)))
-                {
-                    _logger.LogCritical("Unable to add signing key record '{SigningKeyRecordId}' to the in-memory cache", record.Id);
-                    Environment.FailFast($"Unable to add signing key record '{record.Id}' to the in-memory cache");
-                }
-            }
-
-            _logger.LogInformation("All valid keys successfuly added to the in-memory cache");
-        }
-    }
-
     public IEnumerable<JsonWebKey> GetJsonWebKeys()
     {
         return _cache
@@ -141,24 +119,5 @@ public class SigningKeyProvider : ISigningKeyProvider
         };
 
         return (key, keyRecord);
-    }
-
-    private SigningKey SigningKeyFromRecord(SigningKeyRecord record)
-    {
-        var privateKeyRsa = RSA.Create();
-        privateKeyRsa.ImportFromPem(_protector.Unprotect(record.PrivateKeyPem));
-
-        var publicKeyRsa = RSA.Create();
-        publicKeyRsa.ImportFromPem(record.PublicKeyPem);
-
-        return new SigningKey()
-        {
-            Id = record.Id,
-            PrivateKey = new RsaSecurityKey(privateKeyRsa),
-            PublicKey = new RsaSecurityKey(publicKeyRsa) { KeyId = record.Id.ToString() },
-            IssuedAt = record.IssuedAt,
-            SigningExpiresAt = record.IssuedAt.AddDays(_options.SingingKeyLifetimeDays),
-            ExpiresAt = record.IssuedAt.AddDays(_options.ValidationKeyLifetimeDays)
-        };
     }
 }
