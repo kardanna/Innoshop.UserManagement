@@ -47,14 +47,17 @@ public class SigningKeyCacheInitializer : IHostedService
 
             foreach (var record in records)
             {
-                if(!_cache.TryAddKey(SigningKeyFromRecord(record)))
-                {
-                    _logger.LogCritical("Unable to add signing key record '{SigningKeyRecordId}' to the in-memory cache", record.Id);
-                    Environment.FailFast($"Unable to add signing key record '{record.Id}' to the in-memory cache");
-                }
-            }
+                var key = SigningKeyFromRecord(record);
+                if (key is null) continue;
 
-            _logger.LogInformation("All valid keys successfuly added to the in-memory cache");
+                if(!_cache.TryAddKey(key))
+                {
+                    _logger.LogCritical("Failed to add signing key record '{SigningKeyRecordId}' to the in-memory cache", record.Id);
+                    Environment.FailFast($"Failed to add signing key record '{record.Id}' to the in-memory cache");// THROW!!!!!!!
+                }
+
+                _logger.LogInformation("Successfully added RSA key pair record '{SigningKeyRecordId}' to the in-memory cache", record.Id);
+            }
         }
     }
 
@@ -63,22 +66,86 @@ public class SigningKeyCacheInitializer : IHostedService
         return Task.CompletedTask;
     }
 
-    private SigningKey SigningKeyFromRecord(SigningKeyRecord record)
+    private SigningKey? SigningKeyFromRecord(SigningKeyRecord record)
     {
-        var privateKeyRsa = RSA.Create();
-        privateKeyRsa.ImportFromPem(_protector.Unprotect(record.PrivateKeyPem));
+        var publicKey = ConvertPemToSecurityKey(
+            pem: record.PublicKeyPem,
+            keyId: record.Id
+        );
 
-        var publicKeyRsa = RSA.Create();
-        publicKeyRsa.ImportFromPem(record.PublicKeyPem);
+        var privateKey = ConvertPemToSecurityKey(
+            pem: record.PrivateKeyPem,
+            isPemProtected: true
+        );
+
+        if (publicKey is null && privateKey is null)
+        {
+            _logger.LogError("Failed to import validation and signing keys from RSA pair '{KeyId}'.", record.Id);
+            return null;
+        }
+
+        if (publicKey is null && privateKey is not null)
+        {
+            _logger.LogWarning("Failed to import validation key from RSA pair '{KeyId}'. Attempting to recover from signing key...", record.Id);
+
+            try
+            {
+                var rsa = RSA.Create();
+                rsa.ImportFromPem(privateKey.Rsa.ExportRSAPublicKeyPem());
+                publicKey = new RsaSecurityKey(rsa) { KeyId = record.Id.ToString() };
+                _logger.LogInformation("Validation key from RSA pair '{KeyId}' recovered from signing key.", record.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to recover validation key from RSA pair '{KeyId}'. Pair will be rejected", record.Id);
+                return null;
+            }
+        }
+
+        if (privateKey is null)
+        {
+            _logger.LogWarning("Failed to import signing key from RSA pair '{KeyId}'. Key will only be used for validation", record.Id);
+        }        
 
         return new SigningKey()
         {
             Id = record.Id,
-            PrivateKey = new RsaSecurityKey(privateKeyRsa),
-            PublicKey = new RsaSecurityKey(publicKeyRsa) { KeyId = record.Id.ToString() },
+            PrivateKey = privateKey ?? new RsaSecurityKey(RSA.Create()),
+            PublicKey = publicKey!,
             IssuedAt = record.IssuedAt,
-            SigningExpiresAt = record.IssuedAt.AddDays(_options.SingingKeyLifetimeDays),
+            SigningExpiresAt = privateKey is not null 
+                ? record.IssuedAt.AddDays(_options.SingingKeyLifetimeDays)
+                : record.IssuedAt,
             ExpiresAt = record.IssuedAt.AddDays(_options.ValidationKeyLifetimeDays)
         };
+    }
+
+    private RsaSecurityKey? ConvertPemToSecurityKey(string pem, Guid? keyId = null, bool isPemProtected = false)
+    {
+        var rsa = RSA.Create();
+        RsaSecurityKey? securityKey;
+
+        try
+        {
+            if (isPemProtected)
+            {
+                pem = _protector.Unprotect(pem);
+            }
+            
+            rsa.ImportFromPem(pem);            
+            securityKey = new RsaSecurityKey(rsa);
+
+            if (keyId != null)
+            {
+                securityKey.KeyId = keyId.ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unable to convert PEM of key {KeyId} to RSA", keyId);
+            securityKey = null;
+        }
+
+        return securityKey;
     }
 }
