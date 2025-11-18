@@ -53,7 +53,10 @@ public class GetUserController : BaseApiController
             .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
             ?.Value;
         
-        Guid.TryParse(requesterId, out var requesterGuid);
+        if (!Guid.TryParse(requesterId, out var requesterGuid))
+        {
+            return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
+        }
 
         var query = new GetUserQuery(id, requesterGuid);
 

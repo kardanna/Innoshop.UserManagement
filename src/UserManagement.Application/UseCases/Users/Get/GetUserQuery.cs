@@ -4,12 +4,12 @@ namespace UserManagement.Application.UseCases.Users.Get;
 
 public class GetUserQuery : IQuery<GetUserResponse>
 {
-    public Guid Id { get; init; }
+    public Guid UserId { get; init; }
     public Guid? RequesterId { get; init; }
 
-    public GetUserQuery(Guid id, Guid? requesterId = null)
+    public GetUserQuery(Guid userId, Guid? requesterId = null)
     {
-        Id = id;
+        UserId = userId;
         RequesterId = requesterId;
     }
 }

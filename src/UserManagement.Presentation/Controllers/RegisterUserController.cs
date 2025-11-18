@@ -43,7 +43,7 @@ public class RegisterUserController : BaseApiController
         return CreatedAtAction(
             actionName: nameof(GetUserController.GetById),
             controllerName: nameof(GetUserController).Replace("Controller", ""),
-            routeValues: new { id = response.Value.id } ,
+            routeValues: new { id = response.Value.Id } ,
             value: response.Value
         );
     }
@@ -77,7 +77,7 @@ public class RegisterUserController : BaseApiController
         return CreatedAtAction(
             actionName: nameof(GetUserController.GetById),
             controllerName: nameof(GetUserController).Replace("Controller", ""),
-            routeValues: new { id = response.Value.id } ,
+            routeValues: new { id = response.Value.Id } ,
             value: response.Value
         );
     }

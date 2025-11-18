@@ -1,7 +1,7 @@
 namespace UserManagement.Application.UseCases.Users.Get;
 
 public record GetUserResponse(
-    Guid id,
+    Guid Id,
     string FirstName,
     string LastName,
     DateOnly DateOfBirth,
