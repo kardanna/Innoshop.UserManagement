@@ -26,7 +26,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasDefaultValue(false);
 
         builder.HasMany(u => u.Roles)
-            .WithMany(r => r.Users);
+            .WithMany()
+            .UsingEntity<UserRole>();
 
         builder.Property(u => u.IsDeactivated)
             .HasDefaultValue(false);

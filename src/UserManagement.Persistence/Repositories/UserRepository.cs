@@ -36,6 +36,12 @@ public class UserRepository : IUserRepository
 
     public void Add(User user)
     {
+        // Stops EF from adding static Roles to a DB
+        foreach (var role in user.Roles)
+        {
+            _appContext.Attach(role);
+        }
+
         _appContext.Users.Add(user);
     }
 }

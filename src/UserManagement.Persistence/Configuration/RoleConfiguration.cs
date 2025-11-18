@@ -18,10 +18,6 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.Property(r => r.Name)
             .HasMaxLength(20);
 
-        builder.HasMany(r => r.Users)
-            .WithMany(u => u.Roles)
-            .UsingEntity<UserRole>();
-
         builder.HasData(Role.GetValues());
     }
 }
