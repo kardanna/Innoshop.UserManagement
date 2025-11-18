@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using UserManagement.Infrastructure.Authentication.Configuration;
 using UserManagement.Infrastructure.Authentication.Keys;
 
-namespace UserManagement.API.Controllers;
+namespace UserManagement.Presentation.Controllers;
 
 [ApiController]
 [Route(".well-known")]

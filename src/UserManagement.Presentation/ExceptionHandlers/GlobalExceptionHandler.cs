@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
-namespace UserManagement.API.ExceptionHandlers;
+namespace UserManagement.Presentation.ExceptionHandlers;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {

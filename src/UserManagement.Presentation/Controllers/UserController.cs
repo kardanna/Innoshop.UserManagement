@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
-using UserManagement.API.DTOs;
+using UserManagement.Presentation.DTOs;
 using UserManagement.Application.UseCases.Users.Deactivate;
 using UserManagement.Application.UseCases.Users.Get;
 using UserManagement.Application.UseCases.Users.Logout;
@@ -13,16 +13,17 @@ using UserManagement.Application.UseCases.Users.Update;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
+using Microsoft.Extensions.Logging;
 
-namespace UserManagement.API.Controllers;
+namespace UserManagement.Presentation.Controllers;
 
 [Route("user")]
 public class UserController : BaseApiController
 {
-    private readonly ILogger<AuthController> _logger;
+    private readonly ILogger<UserController> _logger;
 
     public UserController(
-        ILogger<AuthController> logger,
+        ILogger<UserController> logger,
         ISender sender)
         : base(sender)
     {

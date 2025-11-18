@@ -1,8 +1,9 @@
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.Domain.Shared;
 
-namespace UserManagement.API.Controllers;
+namespace UserManagement.Presentation.Controllers;
 
 [ApiController]
 public class BaseApiController : ControllerBase

@@ -1,8 +1,9 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using UserManagement.Domain.Shared;
 
-namespace UserManagement.API.Behaviours;
+namespace UserManagement.Presentation.Behaviours;
 
 public class PipelineValidationBehaviour<TRequest, TResponse>
     : IPipelineBehavior<TRequest, TResponse>

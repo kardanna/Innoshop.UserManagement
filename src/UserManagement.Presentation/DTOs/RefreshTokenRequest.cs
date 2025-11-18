@@ -1,4 +1,4 @@
-namespace UserManagement.API.DTOs;
+namespace UserManagement.Presentation.DTOs;
 
 public record RefreshTokenRequest(
     string RefreshToken

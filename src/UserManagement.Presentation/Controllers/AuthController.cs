@@ -1,10 +1,11 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using UserManagement.API.DTOs;
+using UserManagement.Presentation.DTOs;
 using UserManagement.Application.UseCases.Tokens.Refresh;
 using UserManagement.Application.UseCases.Users.Login;
+using Microsoft.Extensions.Logging;
 
-namespace UserManagement.API.Controllers;
+namespace UserManagement.Presentation.Controllers;
 
 [Route("auth")]
 public class AuthController : BaseApiController

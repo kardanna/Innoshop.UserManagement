@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using UserManagement.API.Behaviours;
-using UserManagement.API.ExceptionHandlers;
+using UserManagement.Presentation.Behaviours;
+using UserManagement.Presentation.ExceptionHandlers;
 using UserManagement.API.OptionsSetup;
 using UserManagement.Application.Interfaces;
 using UserManagement.Application.Policies;
@@ -28,7 +28,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers().AddApplicationPart(UserManagement.Presentation.AssemblyReference.Assembly);
         
         builder.Services.AddOpenApi();
 

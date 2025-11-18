@@ -1,22 +1,23 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using UserManagement.API.DTOs;
+using UserManagement.Presentation.DTOs;
 using UserManagement.Application.UseCases.EmailAddresses.Change;
 using UserManagement.Application.UseCases.EmailAddresses.Verify;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using UserManagement.Domain.Shared;
 using UserManagement.Domain.Errors;
+using Microsoft.Extensions.Logging;
 
-namespace UserManagement.API.Controllers;
+namespace UserManagement.Presentation.Controllers;
 
 [Route("user/email")]
 public class EmailController : BaseApiController
 {
-    private readonly ILogger<AuthController> _logger;
+    private readonly ILogger<EmailController> _logger;
 
     public EmailController(
-        ILogger<AuthController> logger,
+        ILogger<EmailController> logger,
         ISender sender)
         : base(sender)
     {
