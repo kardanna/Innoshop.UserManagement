@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using UserManagement.Infrastructure.Authentication.Configuration;
 using UserManagement.Infrastructure.Authentication.Keys;
@@ -10,16 +9,13 @@ namespace UserManagement.Presentation.Controllers;
 [Route(".well-known")]
 public class OpenIdController : ControllerBase
 {
-    private readonly ILogger<OpenIdController> _logger;
     private readonly ISigningKeyProvider _signingKeysProvider;
     private readonly JwtOptions _jwtOptions;
 
     public OpenIdController(
-        ILogger<OpenIdController> logger,
         ISigningKeyProvider signingKeysProvider,
         IOptions<JwtOptions> jwtOptions)
     {
-        _logger = logger;
         _signingKeysProvider = signingKeysProvider;
         _jwtOptions = jwtOptions.Value;
     }

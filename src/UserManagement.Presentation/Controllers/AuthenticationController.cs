@@ -8,12 +8,12 @@ using Microsoft.Extensions.Logging;
 namespace UserManagement.Presentation.Controllers;
 
 [Route("auth")]
-public class AuthController : BaseApiController
+public class AuthenticationController : BaseApiController
 {
-    private readonly ILogger<AuthController> _logger;
+    private readonly ILogger<AuthenticationController> _logger;
 
-    public AuthController(
-        ILogger<AuthController> logger,
+    public AuthenticationController(
+        ILogger<AuthenticationController> logger,
         ISender sender)
         : base(sender)
     {
