@@ -1,4 +1,4 @@
-using UserManagement.Application.Users.Login;
+using UserManagement.Application.UseCases.Users.Login;
 
 namespace UserManagement.Application.Contexts;
 

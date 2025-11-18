@@ -1,4 +1,4 @@
-using UserManagement.Application.Users.Update;
+using UserManagement.Application.UseCases.Users.Update;
 
 namespace UserManagement.Application.Contexts;
 

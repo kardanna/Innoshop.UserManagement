@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using UserManagement.Application.Interfaces;
-using UserManagement.Application.Users.Login;
+using UserManagement.Application.UseCases.Users.Login;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;

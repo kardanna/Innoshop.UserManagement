@@ -1,5 +1,5 @@
 using UserManagement.Domain.Entities;
-using UserManagement.Application.Users.Login;
+using UserManagement.Application.UseCases.Users.Login;
 using UserManagement.Domain.Shared;
 
 namespace UserManagement.Application.Interfaces;

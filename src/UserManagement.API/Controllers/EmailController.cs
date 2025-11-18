@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.API.DTOs;
-using UserManagement.Application.Users.VerifyEmail;
-using UserManagement.Application.Users.ChangeEmail;
+using UserManagement.Application.UseCases.EmailAddresses.Change;
+using UserManagement.Application.UseCases.EmailAddresses.Verify;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using UserManagement.Domain.Shared;
@@ -27,7 +27,7 @@ public class EmailController : BaseApiController
     [HttpPost("verify")]
     public async Task<IActionResult> Post([FromBody] VerifyEmailRequest request)
     {
-        var command = new VerifyEmailCommand(request.VerificationCode);
+        var command = new VerifyEmailAddressCommand(request.VerificationCode);
 
         var response = await _sender.Send(command);
 
@@ -55,7 +55,7 @@ public class EmailController : BaseApiController
             return HandleFailure(Result.Failure(DomainErrors.User.NotFound));
         }
         
-        var command = new ChangeEmailCommand(id, request.NewEmail);
+        var command = new ChangeEmailAddressCommand(id, request.NewEmail);
 
         var response = await _sender.Send(command);
 

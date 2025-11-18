@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.API.DTOs;
-using UserManagement.Application.Tokens.Refresh;
-using UserManagement.Application.Users.Login;
+using UserManagement.Application.UseCases.Tokens.Refresh;
+using UserManagement.Application.UseCases.Users.Login;
 
 namespace UserManagement.API.Controllers;
 
