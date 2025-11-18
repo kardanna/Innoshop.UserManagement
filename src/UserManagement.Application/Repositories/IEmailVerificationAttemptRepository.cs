@@ -8,4 +8,5 @@ public interface IEmailVerificationAttemptRepository
     Task<EmailVerificationAttempt?> GetAsync(string attemptCode);
     void RemoveUnseccessfulAttemptsFor(string email);
     Task<EmailVerificationAttempt?> GetLastSuccessfulAttemptAsync(string email);
+    void RemoveAllUserAttempts(Guid userId);
 }

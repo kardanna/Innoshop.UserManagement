@@ -2,30 +2,32 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
-using UserManagement.Application.UseCases.Users.Get;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using Microsoft.Extensions.Logging;
+using UserManagement.Presentation.DTOs;
+using UserManagement.Application.UseCases.Users.Delete;
+using UserManagement.Application.UseCases.Users.DeleteByAdmin;
 
 namespace UserManagement.Presentation.Controllers;
 
 [Route("user")]
-public class GetUserController : BaseApiController
+public class DeleteUserController : BaseApiController
 {
-    private readonly ILogger<GetUserController> _logger;
+    private readonly ILogger<DeleteUserController> _logger;
 
-    public GetUserController(
-        ILogger<GetUserController> logger,
+    public DeleteUserController(
+        ILogger<DeleteUserController> logger,
         ISender sender)
         : base(sender)
     {
         _logger = logger;
     }
 
-    [HttpGet("me")]
+    [HttpDelete("me")]
     [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
-    public async Task<IActionResult> GetMe()
+    public async Task<IActionResult> DeleteMe([FromBody] DeleteUserRequest request)
     {
         var id = HttpContext.User.Claims
             .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
@@ -36,18 +38,18 @@ public class GetUserController : BaseApiController
             return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
         }
 
-        var query = new GetUserQuery(userGuid);
+        var query = new DeleteUserCommand(userGuid, request.Password);
 
         var response = await _sender.Send(query);
 
         if (response.IsFailure) return HandleFailure(response);
 
-        return Ok(response.Value);
+        return Ok();
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Administrator")]
-    public async Task<IActionResult> GetById(Guid id)
+    public async Task<IActionResult> DeleteById(Guid id)
     {
         var requesterId = HttpContext.User.Claims
             .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
@@ -58,12 +60,12 @@ public class GetUserController : BaseApiController
             return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
         }
 
-        var query = new GetUserQuery(id, requesterGuid);
+        var query = new DeleteUserByAdminCommand(id, requesterGuid);
 
         var response = await _sender.Send(query);
 
         if (response.IsFailure) return HandleFailure(response);
 
-        return Ok(response.Value);
+        return Ok();
     }
 }

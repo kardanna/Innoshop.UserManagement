@@ -88,7 +88,7 @@ public class UserService : IUserService
         return user;
     }
 
-    public async Task<Result<User>> GetUserAsync(Guid id)
+    public async Task<Result<User>> GetAsync(Guid id)
     {
         var user = await _userRepository.GetAsync(id);
 
@@ -97,9 +97,9 @@ public class UserService : IUserService
         return Result.Success(user);
     }
 
-    public async Task<Result<User>> UpdateUserAsync(UpdateUserContext context)
+    public async Task<Result<User>> UpdateAsync(UpdateUserContext context)
     {
-        var user = await GetUserAsync(context.UserId);
+        var user = await GetAsync(context.UserId);
 
         if (user.IsFailure) return user.Error;
 
@@ -116,7 +116,7 @@ public class UserService : IUserService
         return user;
     }
 
-    public async Task<Result> DeactivateUserAsync(Guid userId)
+    public async Task<Result> DeactivateAsync(Guid userId)
     {
         var user = await _userRepository.GetAsync(userId);
 
@@ -138,7 +138,7 @@ public class UserService : IUserService
         return Result.Success();
     }
 
-    public async Task<Result> ReactivateUserAsync(Guid userId)
+    public async Task<Result> ReactivateAsync(Guid userId)
     {
         var user = await _userRepository.GetAsync(userId);
 
@@ -156,6 +156,57 @@ public class UserService : IUserService
                 ReactivatedAtUtc = DateTime.UtcNow
             }
         );
+
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteAsync(DeleteUserContext context)
+    {
+        var user = await _userRepository.GetAsync(context.UserId);
+
+        if (user is null) return Result.Failure(DomainErrors.User.NotFound);
+
+        var passwordMatch = _hasher.VerifyHashedPassword(null!, user.PasswordHash, context.Password);
+
+        if (passwordMatch == PasswordVerificationResult.Failed)
+        {
+            return Result.Failure(DomainErrors.Login.WrongEmailOrPassword);
+        }
+
+        var attempt = await _userPolicy.IsDeleteAllowedAsync(user);
+
+        if (attempt.IsDenied) return Result.Failure(attempt.Error);
+
+        user.FirstName = "USER DELETED";
+        user.LastName = "USER DELETED";
+        user.DateOfBirth = default;
+        user.Email = "USER DELETED";
+        user.IsDeactivated = true;
+        user.DeactivationRequestedAt = DateTime.UtcNow;
+        user.IsDeleted = true;
+        user.DeletionRequestedAt = DateTime.UtcNow;
+
+        //await _unitOfWork.SaveChangesAsync(); //Changes are saved in email service after clearing up user records;
+
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteByAdminAsync(Guid userId)
+    {
+        var user = await _userRepository.GetAsync(userId);
+
+        if (user is null) return Result.Failure(DomainErrors.User.NotFound);
+
+        user.FirstName = "USER DELETED";
+        user.LastName = "USER DELETED";
+        user.DateOfBirth = default;
+        user.Email = "USER DELETED";
+        user.IsDeactivated = true;
+        user.DeactivationRequestedAt = DateTime.UtcNow;
+        user.IsDeleted = true;
+        user.DeletionRequestedAt = DateTime.UtcNow;
+
+        //await _unitOfWork.SaveChangesAsync(); //Changes are saved in email service after clearing up user records;
 
         return Result.Success();
     }

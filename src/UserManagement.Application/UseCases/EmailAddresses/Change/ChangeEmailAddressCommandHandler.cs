@@ -20,7 +20,7 @@ public class ChangeEmailAddressCommandHandler : ICommandHandler<ChangeEmailAddre
 
     public async Task<Result> Handle(ChangeEmailAddressCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userService.GetUserAsync(request.UserId);
+        var user = await _userService.GetAsync(request.UserId);
 
         if (user.IsFailure) return Result.Failure(user.Error);
 

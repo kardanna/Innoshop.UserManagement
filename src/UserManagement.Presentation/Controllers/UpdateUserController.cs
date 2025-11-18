@@ -25,20 +25,20 @@ public class UpdateUserController : BaseApiController
     }
 
     [HttpPut("me")]
-    [Authorize(Roles = nameof(Role.Customer))]
+    [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
     public async Task<IActionResult> Update([FromBody] UpdateUserRequest request)
     {
         var id = HttpContext.User.Claims
             .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
             ?.Value;
         
-        if (id == null || !Guid.TryParse(id, out var guid))
+        if (!Guid.TryParse(id, out var userGuid))
         {
             return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
         }
 
         var command = new UpdateUserCommand(
-            guid,
+            userGuid,
             request.FirstName,
             request.LastName,
             request.DateOfBirth

@@ -19,7 +19,7 @@ public class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, GetUs
     {
         var context = new UpdateUserContext(request);
 
-        var user = await _userService.UpdateUserAsync(context);
+        var user = await _userService.UpdateAsync(context);
 
         if (user.IsFailure) return user.Error;
 

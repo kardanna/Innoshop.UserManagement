@@ -43,4 +43,13 @@ public class EmailVerificationAttemptRepository : IEmailVerificationAttemptRepos
             .OrderByDescending(a => a.AttemptedAt)
             .FirstOrDefaultAsync();
     }
+
+    public void RemoveAllUserAttempts(Guid userId)
+    {
+        var attempts = _appContext.EmailVerificationAttempts
+            .Where(a => a.UserId == userId);
+        
+        _appContext.EmailVerificationAttempts
+            .RemoveRange(attempts);
+    }
 }

@@ -25,7 +25,7 @@ public class GetUserQueryHandler : IQueryHandler<GetUserQuery, GetUserResponse>
             _logger.LogWarning("User with ID '{RequesterId}' requested information about user with ID {UserId}", request.RequesterId, request.UserId);
         }
 
-        var user = await _userService.GetUserAsync(request.UserId);
+        var user = await _userService.GetAsync(request.UserId);
 
         if (user.IsFailure) return user.Error;
 

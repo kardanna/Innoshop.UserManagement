@@ -145,6 +145,8 @@ public class TokenProvider : ITokenProvider
 
         await _unitOfWork.SaveChangesAsync();
 
+        //Publish revoked token to redis?
+
         return Result.Success();
     }
 
@@ -168,6 +170,8 @@ public class TokenProvider : ITokenProvider
         }
 
         await _unitOfWork.SaveChangesAsync();
+
+        //Publish revoked token to redis?
 
         return Result.Success();
     }

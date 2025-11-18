@@ -104,4 +104,10 @@ public class EmailService : IEmailService
         generator.GetBytes(randomNumber);
         return Convert.ToBase64String(randomNumber);
     }
+
+    public async Task ClearUserRecordsAsync(Guid userId)
+    {
+        _repository.RemoveAllUserAttempts(userId);
+        await _unitOfWork.SaveChangesAsync();
+    }
 }

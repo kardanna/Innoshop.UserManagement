@@ -4,6 +4,7 @@ using UserManagement.Application.Interfaces;
 using UserManagement.Application.Models;
 using UserManagement.Application.Options;
 using UserManagement.Application.Repositories;
+using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.Policies;
@@ -54,7 +55,7 @@ public class UserPolicy : IUserPolicy
     {
         var user = await _userRepository.GetAsync(context.UserId);
 
-        if (user is null) return DomainErrors.User.NotFound;
+        if (user is null || user.IsDeleted) return DomainErrors.User.NotFound;
 
         if (user.IsDeactivated) return DomainErrors.User.Deactivated;
 
@@ -89,5 +90,10 @@ public class UserPolicy : IUserPolicy
     private void RegisterLogginAttempt(LoginContext context)
     {
         _loginRepository.AddAttempt(context.Email, context.DeviceFingerprint);
+    }
+
+    public async Task<PolicyResult> IsDeleteAllowedAsync(User user)
+    {
+        return PolicyResult.Success;
     }
 }

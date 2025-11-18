@@ -8,8 +8,10 @@ public interface IUserService
 {
     Task<Result<User>> LoginAsync(LoginContext context);
     Task<Result<User>> RegisterAsync(RegistrationContext context);
-    Task<Result<User>> GetUserAsync(Guid id);
-    Task<Result<User>> UpdateUserAsync(UpdateUserContext context);
-    Task<Result> DeactivateUserAsync(Guid userId);
-    Task<Result> ReactivateUserAsync(Guid userId);
+    Task<Result<User>> GetAsync(Guid id);
+    Task<Result<User>> UpdateAsync(UpdateUserContext context);
+    Task<Result> DeactivateAsync(Guid userId);
+    Task<Result> ReactivateAsync(Guid userId);
+    Task<Result> DeleteAsync(DeleteUserContext context);
+    Task<Result> DeleteByAdminAsync(Guid userId);
 }
