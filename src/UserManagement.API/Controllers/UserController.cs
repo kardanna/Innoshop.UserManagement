@@ -8,7 +8,7 @@ using UserManagement.Application.UseCases.Users.Get;
 using UserManagement.Application.UseCases.Users.Logout;
 using UserManagement.Application.UseCases.Users.LogoutEverywhere;
 using UserManagement.Application.UseCases.Users.Reactivate;
-using UserManagement.Application.UseCases.Users.Registration;
+using UserManagement.Application.UseCases.Users.Register;
 using UserManagement.Application.UseCases.Users.Update;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;

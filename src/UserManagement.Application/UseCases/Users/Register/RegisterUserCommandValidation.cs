@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace UserManagement.Application.UseCases.Users.Registration;
+namespace UserManagement.Application.UseCases.Users.Register;
 
 public class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
 {

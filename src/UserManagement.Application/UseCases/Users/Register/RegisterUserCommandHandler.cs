@@ -4,7 +4,7 @@ using UserManagement.Application.Messaging;
 using UserManagement.Application.UseCases.Users.Get;
 using UserManagement.Domain.Shared;
 
-namespace UserManagement.Application.UseCases.Users.Registration;
+namespace UserManagement.Application.UseCases.Users.Register;
 
 public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, GetUserResponse>
 {

@@ -1,4 +1,4 @@
-using UserManagement.Application.UseCases.Users.Registration;
+using UserManagement.Application.UseCases.Users.Register;
 
 namespace UserManagement.Application.Contexts;
 
