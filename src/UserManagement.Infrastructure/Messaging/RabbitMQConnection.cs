@@ -1,3 +1,4 @@
+using Innoshop.Contracts.UserManagement;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
@@ -38,34 +39,44 @@ public class RabbitMQConnection : IAsyncDisposable
         _logger.LogInformation($"Created a channel");
 
         await Channel.QueueDeclareAsync(
-            queue: "UserManagement.TokenRevoked",
+            queue: TokenRevokedMessage.QueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
             passive: false,
             noWait: false
         );
-        _logger.LogInformation($"Created queue 'UserManagement.TokenRevoked'");
+        _logger.LogInformation("Created queue '{RabbitMQQueueName}'", TokenRevokedMessage.QueueName);
 
         await Channel.QueueDeclareAsync(
-            queue: "UserManagement.UserDeactivated",
+            queue: UserDeactivatedMessage.QueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
             passive: false,
             noWait: false
         );
-        _logger.LogInformation($"Created queue 'UserManagement.UserDeactivated'");
+        _logger.LogInformation("Created queue '{RabbitMQQueueName}'", UserDeactivatedMessage.QueueName);
 
         await Channel.QueueDeclareAsync(
-            queue: "UserManagement.UserDeleted",
+            queue: UserReactivatedMessage.QueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
             passive: false,
             noWait: false
         );
-        _logger.LogInformation($"Created queue 'UserManagement.UserDeleted'");
+        _logger.LogInformation("Created queue '{RabbitMQQueueName}'", UserReactivatedMessage.QueueName);
+
+        await Channel.QueueDeclareAsync(
+            queue: UserDeletedMessage.QueueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            passive: false,
+            noWait: false
+        );
+        _logger.LogInformation("Created queue '{RabbitMQQueueName}'", UserDeletedMessage.QueueName);
     }
 
     public async ValueTask DisposeAsync()

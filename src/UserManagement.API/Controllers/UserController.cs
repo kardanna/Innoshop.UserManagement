@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using UserManagement.API.DTOs;
+using UserManagement.Application.Users.Deactivate;
 using UserManagement.Application.Users.Get;
 using UserManagement.Application.Users.Logout;
 using UserManagement.Application.Users.LogoutEverywhere;
+using UserManagement.Application.Users.Reactivate;
 using UserManagement.Application.Users.Registration;
 using UserManagement.Application.Users.Update;
 using UserManagement.Domain.Entities;
@@ -176,6 +178,54 @@ public class UserController : BaseApiController
         var command = new LogoutUserEverywhereCommand(
             userId,
             requesterGuid
+        );
+
+        var response = await _sender.Send(command);
+
+        if (response.IsFailure) return HandleFailure(response);
+
+        return Ok();
+    }
+
+    [HttpPost("me/deactivate")]
+    [Authorize(Roles = nameof(Role.Customer))]
+    public async Task<IActionResult> Deactivate()
+    {
+        var userId = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
+            ?.Value;
+        
+        if (userId == null || !Guid.TryParse(userId, out var guid))
+        {
+            return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
+        }
+
+        var command = new DeactivateUserCommand(
+            guid
+        );
+
+        var response = await _sender.Send(command);
+
+        if (response.IsFailure) return HandleFailure(response);
+
+        return Ok();
+    }
+
+    [HttpPost("me/reactivate")]
+    [Authorize(Roles = nameof(Role.Customer))]
+    public async Task<IActionResult> Reactivate()
+    {
+        var userId = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
+            ?.Value;
+        
+        if (userId == null || !Guid.TryParse(userId, out var guid))
+        {
+            return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
+        }
+
+        var command = new ReactivateUserCommand(
+            guid
         );
 
         var response = await _sender.Send(command);

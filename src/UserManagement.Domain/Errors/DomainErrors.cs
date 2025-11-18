@@ -10,6 +10,11 @@ public static class DomainErrors
             "User.NotFound",
             "Requested user not found."
         );
+
+        public static readonly Error Deactivated = new(
+            "User.Deactivated",
+            "User is deactivated."
+        );
     }
 
     public static class Authentication

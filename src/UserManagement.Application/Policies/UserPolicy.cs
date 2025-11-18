@@ -10,20 +10,20 @@ namespace UserManagement.Application.Policies;
 
 public class UserPolicy : IUserPolicy
 {
-    private readonly IUserRepository _userRpository;
+    private readonly IUserRepository _userRepository;
     private readonly ILoginAttemptRepository _loginRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly RegistrationOptions _registrationOptions;
     private readonly LoginOptions _loginOptions;
 
     public UserPolicy(
-        IUserRepository userRpository,
+        IUserRepository userRepository,
         ILoginAttemptRepository loginRepository,
         IUnitOfWork unitOfWork,
         IOptions<RegistrationOptions> registrationOptions,
         IOptions<LoginOptions> loginOptions)
     {
-        _userRpository = userRpository;
+        _userRepository = userRepository;
         _loginRepository = loginRepository;
         _unitOfWork = unitOfWork;
         _registrationOptions = registrationOptions.Value;
@@ -40,7 +40,7 @@ public class UserPolicy : IUserPolicy
             return DomainErrors.Register.IllegalAge;
         }
 
-        var isEmailAvailable = await _userRpository.CountUsersWithEmailAsync(context.Email) == 0;
+        var isEmailAvailable = await _userRepository.CountUsersWithEmailAsync(context.Email) == 0;
 
         if (!isEmailAvailable)
         {
@@ -52,6 +52,12 @@ public class UserPolicy : IUserPolicy
 
     public async Task<PolicyResult> IsUpdateAllowedAsync(UpdateUserContext context)
     {
+        var user = await _userRepository.GetAsync(context.UserId);
+
+        if (user is null) return DomainErrors.User.NotFound;
+
+        if (user.IsDeactivated) return DomainErrors.User.Deactivated;
+
         var isOfLegalAge = context.DateOfBirth <
             DateOnly.FromDateTime(DateTime.Now.AddYears(-_registrationOptions.MustBeAtLeastYears));
 
@@ -73,14 +79,14 @@ public class UserPolicy : IUserPolicy
             return DomainErrors.Login.TooManyAttempts;
         }
 
-        RegisterAttempt(context);
+        RegisterLogginAttempt(context);
 
         await _unitOfWork.SaveChangesAsync();
         
         return PolicyResult.Success;
     }
 
-    private void RegisterAttempt(LoginContext context)
+    private void RegisterLogginAttempt(LoginContext context)
     {
         _loginRepository.AddAttempt(context.Email, context.DeviceFingerprint);
     }

@@ -10,4 +10,6 @@ public interface IUserService
     Task<Result<User>> RegisterAsync(RegistrationContext context);
     Task<Result<User>> GetUserAsync(Guid id);
     Task<Result<User>> UpdateUserAsync(UpdateUserContext context);
+    Task<Result> DeactivateUserAsync(Guid userId);
+    Task<Result> ReactivateUserAsync(Guid userId);
 }

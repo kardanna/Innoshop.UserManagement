@@ -80,10 +80,14 @@ public class EmailService : IEmailService
 
         attemptRecord.IsSucceeded = true;
         attemptRecord.SucceededAt = DateTime.UtcNow;
-        attemptRecord.User.IsEmailVerified = true;
-        //attemptRecord.User.LastModifiedAt = DateTime.UtcNow; //Handle differently
+        
+        if (attemptRecord.PreviousEmail is null)
+        {
+            attemptRecord.User.IsEmailVerified = true;
+            attemptRecord.User.IsDeactivated = false;
+        }
 
-        if (attemptRecord.PreviousEmail != null)
+        if (attemptRecord.PreviousEmail is not null)
         {
             attemptRecord.User.Email = attemptRecord.Email;
         }

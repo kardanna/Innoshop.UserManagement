@@ -24,7 +24,7 @@ public class EmailController : BaseApiController
     }
 
  
-    [HttpPost("confirm")]
+    [HttpPost("verify")]
     public async Task<IActionResult> Post([FromBody] VerifyEmailRequest request)
     {
         var command = new VerifyEmailCommand(request.VerificationCode);

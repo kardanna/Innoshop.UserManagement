@@ -14,18 +14,20 @@ public class UserService : IUserService
     private readonly IPasswordHasher<User> _hasher;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserPolicy _userPolicy;
+    private readonly IInnoshopNotifier _innoshopNotifier;
 
     public UserService(
-        IEmailService emailService,
         IUserRepository userRepository,
         IPasswordHasher<User> hasher,
         IUnitOfWork unitOfWork,
-        IUserPolicy userPolicy)
+        IUserPolicy userPolicy,
+        IInnoshopNotifier innoshopNotifier)
     {
         _userRepository = userRepository;
         _hasher = hasher;
         _unitOfWork = unitOfWork;
         _userPolicy = userPolicy;
+        _innoshopNotifier = innoshopNotifier;
     }
 
     public async Task<Result<User>> LoginAsync(LoginContext context)
@@ -75,7 +77,8 @@ public class UserService : IUserService
             DateOfBirth = context.DateOfBirth,
             Email = context.Email,
             PasswordHash = _hasher.HashPassword(null!, context.Password),
-            Roles = []
+            Roles = [ Role.Customer ],
+            IsDeactivated = true
         };
 
         _userRepository.Add(user);
@@ -111,5 +114,49 @@ public class UserService : IUserService
         await _unitOfWork.SaveChangesAsync();
 
         return user;
+    }
+
+    public async Task<Result> DeactivateUserAsync(Guid userId)
+    {
+        var user = await _userRepository.GetAsync(userId);
+
+        if (user is null) return Result.Failure(DomainErrors.User.NotFound);
+
+        if (user.IsDeactivated) return Result.Success();
+
+        user.IsDeactivated = true;
+        user.DeactivationRequestedAt = DateTime.UtcNow;
+        await _unitOfWork.SaveChangesAsync();
+
+        await _innoshopNotifier.SendUserDeactivatedNotificationAsync(new()
+            {
+                UserId = user.Id,
+                DeactivatedAtUtc = DateTime.UtcNow
+            }
+        );
+
+        return Result.Success();
+    }
+
+    public async Task<Result> ReactivateUserAsync(Guid userId)
+    {
+        var user = await _userRepository.GetAsync(userId);
+
+        if (user is null) return Result.Failure(DomainErrors.User.NotFound);
+
+        if (!user.IsDeactivated) return Result.Success();
+
+        user.IsDeactivated = false;
+        user.DeactivationRequestedAt = null;
+        await _unitOfWork.SaveChangesAsync();
+
+        await _innoshopNotifier.SendUserReactivatedNotificationAsync(new()
+            {
+                UserId = user.Id,
+                ReactivatedAtUtc = DateTime.UtcNow
+            }
+        );
+
+        return Result.Success();
     }
 }

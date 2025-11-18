@@ -44,6 +44,8 @@ public class EmailPolicy : IEmailPolicy
 
     public async Task<PolicyResult> IsEmailChangeAllowed(EmailChangeContext context)
     {
+        if (context.User.IsDeactivated) return DomainErrors.User.Deactivated;
+
         var isTheSameEmail = context.User.Email == context.NewEmail;
 
         if (isTheSameEmail) return DomainErrors.EmailChange.TheSameEmail;
