@@ -77,13 +77,13 @@ public class UserService : IUserService
             DateOfBirth = context.DateOfBirth,
             Email = context.Email,
             PasswordHash = _hasher.HashPassword(null!, context.Password),
-            Roles = [ Role.Customer ],
+            Roles = context.Roles,
             IsDeactivated = true
         };
 
         _userRepository.Add(user);
 
-        //Save is performed inside Email service after sending verification email 
+        //Save on DB context is performed inside Email service after sending verification email 
 
         return user;
     }

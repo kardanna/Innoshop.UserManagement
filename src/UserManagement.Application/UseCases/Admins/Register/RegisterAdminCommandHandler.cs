@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
 using UserManagement.Application.Messaging;
@@ -5,24 +6,29 @@ using UserManagement.Application.UseCases.Users.Get;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Shared;
 
-namespace UserManagement.Application.UseCases.Users.Register;
+namespace UserManagement.Application.UseCases.Admins.Register;
 
-public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, GetUserResponse>
+public class RegisterAdminCommandHandler : ICommandHandler<RegisterAdminCommand, GetUserResponse>
 {
     private readonly IUserService _userService;
     private readonly IEmailService _emailService;
+    private readonly ILogger<RegisterAdminCommandHandler> _logger;
 
-    public RegisterUserCommandHandler(
+    public RegisterAdminCommandHandler(
         IUserService userService,
-        IEmailService emailService)
+        IEmailService emailService,
+        ILogger<RegisterAdminCommandHandler> logger)
     {
         _userService = userService;
         _emailService = emailService;
+        _logger = logger;
     }
 
-    public async Task<Result<GetUserResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<GetUserResponse>> Handle(RegisterAdminCommand request, CancellationToken cancellationToken)
     {
-        var context = new RegistrationContext(request, Role.Customer);
+        _logger.LogWarning("Registering new admin user by request of '{UserId}' administrator", request.RequesterId);
+
+        var context = new RegistrationContext(request, Role.Administrator);
 
         var user = await _userService.RegisterAsync(context);
 
@@ -40,6 +46,8 @@ public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, G
             user.Value.IsEmailVerified,
             user.Value.IsDeactivated
         );
+
+        _logger.LogWarning("New administrator '{UserId}' registered successfully. Email verification pending.", user.Value.Id);
 
         return response;
     }
