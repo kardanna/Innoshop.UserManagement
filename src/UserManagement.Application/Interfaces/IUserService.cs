@@ -6,12 +6,13 @@ namespace UserManagement.Application.Interfaces;
 
 public interface IUserService
 {
-    Task<Result<User>> LoginAsync(LoginContext context);
+    Task<Result<User>> LoginAsync(LoginUserContext context);
     Task<Result<User>> RegisterAsync(RegistrationContext context);
     Task<Result<User>> GetAsync(Guid id);
     Task<Result<User>> UpdateAsync(UpdateUserContext context);
-    Task<Result> DeactivateAsync(Guid userId);
-    Task<Result> ReactivateAsync(Guid userId);
+    Task<Result> DeactivateAsync(Guid subjectId, Guid requesterId);
+    Task<Result> ReactivateAsync(Guid subjectId, Guid requesterId);
     Task<Result> DeleteAsync(DeleteUserContext context);
     Task<Result> DeleteByAdminAsync(Guid userId);
+    Task<bool> IsUserDeacivated(Guid userId);
 }

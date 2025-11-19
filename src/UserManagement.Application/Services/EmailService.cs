@@ -84,7 +84,6 @@ public class EmailService : IEmailService
         if (attemptRecord.PreviousEmail is null)
         {
             attemptRecord.User.IsEmailVerified = true;
-            attemptRecord.User.IsDeactivated = false;
         }
 
         if (attemptRecord.PreviousEmail is not null)

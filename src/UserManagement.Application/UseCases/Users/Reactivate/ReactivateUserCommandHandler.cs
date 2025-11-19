@@ -15,7 +15,7 @@ public class ReactivateUserCommandHandler : ICommandHandler<ReactivateUserComman
 
     public async Task<Result> Handle(ReactivateUserCommand request, CancellationToken cancellationToken)
     {
-        var response = await _userService.ReactivateAsync(request.UserId);
+        var response = await _userService.ReactivateAsync(request.UserId, request.RequesterId);
 
         return response;
     }

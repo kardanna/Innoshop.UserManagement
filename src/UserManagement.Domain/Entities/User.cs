@@ -11,8 +11,6 @@ public class User
     public string PasswordHash { get; set; } = null!;
     public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
 
-    public bool IsDeactivated { get; set; }
-    public DateTime? DeactivationRequestedAt { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletionRequestedAt { get; set; }
 

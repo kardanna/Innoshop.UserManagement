@@ -3,7 +3,7 @@ using UserManagement.Application.Interfaces;
 using UserManagement.Application.Messaging;
 using UserManagement.Domain.Shared;
 
-namespace UserManagement.Application.UseCases.Users.DeleteByAdmin;
+namespace UserManagement.Application.UseCases.Users.Delete;
 
 public class DeleteUserByAdminCommandHandler : ICommandHandler<DeleteUserByAdminCommand>
 {

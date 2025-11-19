@@ -2,13 +2,13 @@ using UserManagement.Application.UseCases.Users.Login;
 
 namespace UserManagement.Application.Contexts;
 
-public class LoginContext
+public class LoginUserContext
 {
     public string Email { get; init; }
     public string Password { get; init; }
     public string DeviceFingerprint { get; init; }
 
-    public LoginContext(LoginUserCommand command)
+    public LoginUserContext(LoginUserCommand command)
     {
         Email = command.Email;
         Password = command.Password;

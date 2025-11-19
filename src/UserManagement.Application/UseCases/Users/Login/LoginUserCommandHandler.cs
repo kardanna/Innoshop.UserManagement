@@ -18,7 +18,7 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, LoginUs
 
     public async Task<Result<LoginUserResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
-        var loginContext = new LoginContext(request);
+        var loginContext = new LoginUserContext(request);
 
         var user = await _userService.LoginAsync(loginContext);
 

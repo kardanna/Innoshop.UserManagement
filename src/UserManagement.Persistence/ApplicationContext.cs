@@ -13,6 +13,8 @@ public class ApplicationContext : DbContext
     public DbSet<EmailVerificationAttempt> EmailVerificationAttempts { get; set; }
     public DbSet<PasswordRestoreAttempt> PasswordRestoreAttempts { get; set; }
 
+    public DbSet<UserDeactivation> UserDeactivations { get; set; }
+
     public DbSet<TokenRecord> TokenRecords { get; set; }
     public DbSet<SigningKeyRecord> SigningKeys { get; set; }
 

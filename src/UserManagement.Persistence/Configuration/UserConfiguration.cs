@@ -29,9 +29,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithMany()
             .UsingEntity<UserRole>();
 
-        builder.Property(u => u.IsDeactivated)
-            .HasDefaultValue(false);
-
         builder.Property(u => u.IsDeleted)
             .HasDefaultValue(false);
 

@@ -4,10 +4,14 @@ namespace UserManagement.Application.UseCases.Users.Deactivate;
 
 public class DeactivateUserCommand : ICommand
 {
-    public Guid UserId { get; set; }
+    public Guid UserId { get; init; }
+    public Guid RequesterId { get; init; }
     
-    public DeactivateUserCommand(Guid userId)
+    public DeactivateUserCommand(
+        Guid userId,
+        Guid requesterId)
     {
         UserId = userId;
+        RequesterId = requesterId;
     }
 }

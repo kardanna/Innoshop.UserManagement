@@ -17,6 +17,42 @@ public static class DomainErrors
         );
     }
 
+    public static class Deactivation
+    {
+        public static readonly Error AlreadyDeactivated = new(
+            "Deactivation.AlreadyDeactivated",
+            "The user has already been deactivated."
+        );
+
+        public static readonly Error CannotDeactivateAdmin = new(
+            "Deactivation.CannotDeactivateAdmin",
+            "Admin users cannot be deactivated or reactivated."
+        );
+
+        public static readonly Error NotAdminRequester = new(
+            "Deactivation.NotAdminRequester",
+            "Only admin users can deactivate other users."
+        );
+    }
+
+    public static class Reactivation
+    {
+        public static readonly Error AlreadyReactivated = new(
+            "Reactivation.AlreadyReactivated",
+            "The user is not deactivated."
+        );
+
+        public static readonly Error CannotReactivateAdmin = new(
+            "Reactivation.CannotReactivateAdmin",
+            "Admin users cannot be deactivated or reactivated."
+        );
+
+        public static readonly Error NotAdminRequester = new(
+            "Reactivation.NotAdminRequester",
+            "Only admin users can reactivate users that were deactivated by admin."
+        );
+    }
+
     public static class Authentication
     {
         public static readonly Error InvalidSubjectClaim = new(
@@ -38,11 +74,6 @@ public static class DomainErrors
 
     public static class Register
     {
-        public static readonly Error EmailAlreadyInUse = new(
-            "Register.EmailAlreadyInUse",
-            "Specified email is already in use."
-        );
-
         public static readonly Error IllegalAge = new(
             "Register.IllegalAge",
             "User must be older to register."
@@ -54,6 +85,16 @@ public static class DomainErrors
         public static readonly Error InvalidFormat = new(
             "Email.InvalidFormat",
             "Invalid email."
+        );
+
+        public static readonly Error EmailAlreadyInUse = new(
+            "Register.EmailAlreadyInUse",
+            "Specified email is already in use."
+        );
+
+        public static readonly Error EmailUnverified = new(
+            "Login.EmailUnverified",
+            "Can not login with unverified account."
         );
     }
 
@@ -67,11 +108,6 @@ public static class DomainErrors
 
     public static class EmailChange
     {
-        public static readonly Error EmailAlreadyInUse = new(
-            "EmailChange.EmailAlreadyInUse",
-            "Specified email is already in use."
-        );
-
         public static readonly Error TooOften = new(
             "EmailChange.TooOften",
             "Policy on number of successful email changes in a set period of time is violated."
@@ -93,11 +129,6 @@ public static class DomainErrors
         public static readonly Error TooManyAttempts = new(
             "Login.TooManyAttempts",
             "Too many login attempts reached. Try again later."
-        );
-
-        public static readonly Error EmailUnverified = new(
-            "Login.EmailUnverified",
-            "Can not login with unverified account."
         );
     }
 

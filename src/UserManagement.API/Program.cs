@@ -54,6 +54,7 @@ public class Program
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
         builder.Services.AddScoped<IEmailVerificationAttemptRepository, EmailVerificationAttemptRepository>();
+        builder.Services.AddScoped<IUserDeactivationRepository, UserDeactivationRepository>();
         builder.Services.AddScoped<IUserPolicy, UserPolicy>();
         builder.Services.AddScoped<IEmailPolicy, EmailPolicy>();
 

@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
-using UserManagement.Application.UseCases.Users.Deactivate;
 using UserManagement.Application.UseCases.Users.Reactivate;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
@@ -12,40 +11,16 @@ using Microsoft.Extensions.Logging;
 namespace UserManagement.Presentation.Controllers;
 
 [Route("user")]
-public class DeactivateUserController : BaseApiController
+public class ReactivateUserController : BaseApiController
 {
-    private readonly ILogger<DeactivateUserController> _logger;
+    private readonly ILogger<ReactivateUserController> _logger;
 
-    public DeactivateUserController(
-        ILogger<DeactivateUserController> logger,
+    public ReactivateUserController(
+        ILogger<ReactivateUserController> logger,
         ISender sender)
         : base(sender)
     {
         _logger = logger;
-    }
-
-    [HttpPost("me/deactivate")]
-    [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
-    public async Task<IActionResult> Deactivate()
-    {
-        var userId = HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
-            ?.Value;
-        
-        if (userId == null || !Guid.TryParse(userId, out var guid))
-        {
-            return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
-        }
-
-        var command = new DeactivateUserCommand(
-            guid
-        );
-
-        var response = await _sender.Send(command);
-
-        if (response.IsFailure) return HandleFailure(response);
-
-        return Ok();
     }
 
     [HttpPost("me/reactivate")]
@@ -56,13 +31,39 @@ public class DeactivateUserController : BaseApiController
             .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
             ?.Value;
         
-        if (userId == null || !Guid.TryParse(userId, out var guid))
+        if (!Guid.TryParse(userId, out var userGuid))
         {
             return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
         }
 
         var command = new ReactivateUserCommand(
-            guid
+            userId: userGuid,
+            requesterId: userGuid
+        );
+
+        var response = await _sender.Send(command);
+
+        if (response.IsFailure) return HandleFailure(response);
+
+        return Ok();
+    }
+
+    [HttpPost("{userId:guid}/reactivate")]
+    [Authorize(Roles = nameof(Role.Administrator))]
+    public async Task<IActionResult> Reactivate(Guid userId)
+    {
+        var requesterId = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)
+            ?.Value;
+        
+        if (!Guid.TryParse(requesterId, out var requesterGuid))
+        {
+            return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
+        }
+
+        var command = new ReactivateUserCommand(
+            userId: userId,
+            requesterId: requesterGuid
         );
 
         var response = await _sender.Send(command);

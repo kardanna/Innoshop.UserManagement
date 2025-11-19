@@ -1,6 +1,6 @@
 using UserManagement.Application.Messaging;
 
-namespace UserManagement.Application.UseCases.Users.DeleteByAdmin;
+namespace UserManagement.Application.UseCases.Users.Delete;
 
 public class DeleteUserByAdminCommand : ICommand
 {

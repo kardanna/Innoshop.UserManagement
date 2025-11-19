@@ -38,7 +38,7 @@ public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, G
             user.Value.Email,
             user.Value.Roles.Select(r => r.Name),
             user.Value.IsEmailVerified,
-            user.Value.IsDeactivated
+            await _userService.IsUserDeacivated(user.Value.Id)
         );
 
         return response;

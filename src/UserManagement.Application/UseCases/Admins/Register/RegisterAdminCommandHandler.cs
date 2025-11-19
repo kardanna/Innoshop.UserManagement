@@ -44,7 +44,7 @@ public class RegisterAdminCommandHandler : ICommandHandler<RegisterAdminCommand,
             user.Value.Email,
             user.Value.Roles.Select(r => r.Name),
             user.Value.IsEmailVerified,
-            user.Value.IsDeactivated
+            await _userService.IsUserDeacivated(user.Value.Id)
         );
 
         _logger.LogWarning("New administrator '{UserId}' registered successfully. Email verification pending.", user.Value.Id);
