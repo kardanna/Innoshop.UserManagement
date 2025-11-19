@@ -13,6 +13,5 @@ public interface IUserService
     Task<Result> DeactivateAsync(Guid subjectId, Guid requesterId);
     Task<Result> ReactivateAsync(Guid subjectId, Guid requesterId);
     Task<Result> DeleteAsync(DeleteUserContext context);
-    Task<Result> DeleteByAdminAsync(Guid userId);
     Task<bool> IsUserDeacivated(Guid userId);
 }

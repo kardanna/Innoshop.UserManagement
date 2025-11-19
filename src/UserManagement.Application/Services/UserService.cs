@@ -35,6 +35,7 @@ public class UserService : IUserService
 
     private const string DEACTIVATED_BY_HIMSELF_COMMENTARY = "Request issued by user";
     private const string DEACTIVATED_BY_ADMIN_COMMENTARY = "Request issued by administrator";
+    private const string PLACEHOLDER_FOR_DELETED_USER = "USER DELETED";
 
     public async Task<Result<User>> LoginAsync(LoginUserContext context)
     {
@@ -198,49 +199,34 @@ public class UserService : IUserService
 
     public async Task<Result> DeleteAsync(DeleteUserContext context)
     {
-        var user = await _userRepository.GetAsync(context.UserId);
+        var subject = await _userRepository.GetAsync(context.SubjectId);
 
-        if (user is null) return Result.Failure(DomainErrors.User.NotFound);
+        if (subject is null) return Result.Failure(DomainErrors.User.NotFound);
 
-        var passwordMatch = _hasher.VerifyHashedPassword(null!, user.PasswordHash, context.Password);
+        User? requester;
 
-        if (passwordMatch == PasswordVerificationResult.Failed)
+        if (context.SubjectId == context.RequesterId)
         {
-            return Result.Failure(DomainErrors.Login.WrongEmailOrPassword);
+            requester = subject;
         }
-
-        var attempt = await _userPolicy.IsDeleteAllowedAsync(user);
+        else
+        {
+            requester = await _userRepository.GetAsync(context.RequesterId);
+            if (requester is null) return Result.Failure(DomainErrors.User.NotFound);
+        }
+        
+        var attempt = await _userPolicy.IsDeletionAllowedAsync(subject, requester, context);
 
         if (attempt.IsDenied) return Result.Failure(attempt.Error);
 
-        user.FirstName = "USER DELETED";
-        user.LastName = "USER DELETED";
-        user.DateOfBirth = default;
-        user.Email = "USER DELETED";
-        user.IsDeleted = true;
-        user.DeletionRequestedAt = DateTime.UtcNow;
+        subject.FirstName = PLACEHOLDER_FOR_DELETED_USER;
+        subject.LastName = PLACEHOLDER_FOR_DELETED_USER;
+        subject.DateOfBirth = default;
+        subject.Email = PLACEHOLDER_FOR_DELETED_USER;
+        subject.IsDeleted = true;
+        subject.DeletionRequestedAt = DateTime.UtcNow;
 
-        _userDeactivationRepository.RemoveAllForUser(context.UserId);
-
-        //await _unitOfWork.SaveChangesAsync(); //Changes are saved in email service after clearing up user records;
-
-        return Result.Success();
-    }
-
-    public async Task<Result> DeleteByAdminAsync(Guid userId)
-    {
-        var user = await _userRepository.GetAsync(userId);
-
-        if (user is null) return Result.Failure(DomainErrors.User.NotFound);
-
-        user.FirstName = "USER DELETED";
-        user.LastName = "USER DELETED";
-        user.DateOfBirth = default;
-        user.Email = "USER DELETED";
-        user.IsDeleted = true;
-        user.DeletionRequestedAt = DateTime.UtcNow;
-
-        _userDeactivationRepository.RemoveAllForUser(userId);
+        _userDeactivationRepository.RemoveAllForUser(context.SubjectId);
 
         //await _unitOfWork.SaveChangesAsync(); //Changes are saved in email service after clearing up user records;
 

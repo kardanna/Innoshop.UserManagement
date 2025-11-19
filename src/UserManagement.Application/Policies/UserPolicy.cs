@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
@@ -17,6 +18,7 @@ public class UserPolicy : IUserPolicy
     private readonly IUnitOfWork _unitOfWork;
     private readonly RegistrationOptions _registrationOptions;
     private readonly LoginOptions _loginOptions;
+    private readonly IPasswordHasher<User> _hasher;
 
     public UserPolicy(
         IUserRepository userRepository,
@@ -24,7 +26,8 @@ public class UserPolicy : IUserPolicy
         IUserDeactivationRepository userDeactivationRepository,
         IUnitOfWork unitOfWork,
         IOptions<RegistrationOptions> registrationOptions,
-        IOptions<LoginOptions> loginOptions)
+        IOptions<LoginOptions> loginOptions,
+        IPasswordHasher<User> hasher)
     {
         _userRepository = userRepository;
         _loginRepository = loginRepository;
@@ -32,6 +35,7 @@ public class UserPolicy : IUserPolicy
         _unitOfWork = unitOfWork;
         _registrationOptions = registrationOptions.Value;
         _loginOptions = loginOptions.Value;
+        _hasher = hasher;
     }
 
     public async Task<PolicyResult> IsRegistrationAllowedAsync(RegistrationContext context)
@@ -104,8 +108,21 @@ public class UserPolicy : IUserPolicy
         return PolicyResult.Success;
     }
 
-    public async Task<PolicyResult> IsDeleteAllowedAsync(User user)
+    public async Task<PolicyResult> IsDeletionAllowedAsync(User subject, User requester, DeleteUserContext context)
     {
+        if (subject != requester && HasAdminRole(requester)) return PolicyResult.Success;
+
+        if (subject != requester && !HasAdminRole(requester)) return DomainErrors.Deletion.NotAdminRequester;
+
+        if (context.Password is null) return DomainErrors.Deletion.EmptyOrWrongPassword;
+
+        var passwordMatch = _hasher.VerifyHashedPassword(null!, subject.PasswordHash, context.Password);
+
+        if (passwordMatch == PasswordVerificationResult.Failed)
+        {
+            return DomainErrors.Deletion.EmptyOrWrongPassword;
+        }
+
         return PolicyResult.Success;
     }
 

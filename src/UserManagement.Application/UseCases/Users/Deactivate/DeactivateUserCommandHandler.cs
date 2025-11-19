@@ -15,7 +15,7 @@ public class DeactivateUserCommandHandler : ICommandHandler<DeactivateUserComman
 
     public async Task<Result> Handle(DeactivateUserCommand request, CancellationToken cancellationToken)
     {
-        var response = await _userService.DeactivateAsync(request.UserId, request.RequesterId);
+        var response = await _userService.DeactivateAsync(request.SubjectId, request.RequesterId);
 
         return response;
     }

@@ -4,15 +4,18 @@ namespace UserManagement.Application.UseCases.Users.Delete;
 
 public class DeleteUserCommand : ICommand
 {
-    public Guid UserId { get; init; }
-    public string Password { get; init; }
+    public Guid SubjectId { get; init; }
+    public string? Password { get; init; }
+    public Guid RequesterId { get; init; }
 
     public DeleteUserCommand(
-        Guid userId,
-        string password
+        Guid subjectId,
+        string? password,
+        Guid requesterId
     )
     {
-        UserId = userId;
+        SubjectId = subjectId;
         Password = password;
+        RequesterId = requesterId;
     }
 }

@@ -17,6 +17,19 @@ public static class DomainErrors
         );
     }
 
+    public static class Deletion
+    {
+        public static readonly Error NotAdminRequester = new(
+            "Deletion.NotAdminRequester",
+            "Only admin users can delete users other that themself."
+        );
+
+        public static readonly Error EmptyOrWrongPassword = new(
+            "Deletion.WrongPassword",
+            "Password is empty or wrong."
+        );
+    }
+
     public static class Deactivation
     {
         public static readonly Error AlreadyDeactivated = new(
@@ -88,12 +101,12 @@ public static class DomainErrors
         );
 
         public static readonly Error EmailAlreadyInUse = new(
-            "Register.EmailAlreadyInUse",
+            "Email.EmailAlreadyInUse",
             "Specified email is already in use."
         );
 
         public static readonly Error EmailUnverified = new(
-            "Login.EmailUnverified",
+            "Email.EmailUnverified",
             "Can not login with unverified account."
         );
     }

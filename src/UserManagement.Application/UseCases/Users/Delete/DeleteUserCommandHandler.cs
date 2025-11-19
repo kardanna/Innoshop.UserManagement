@@ -32,11 +32,11 @@ public class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand>
 
         if (result.IsFailure) return result;
 
-        await _emailService.ClearUserRecordsAsync(request.UserId);
+        await _emailService.ClearUserRecordsAsync(request.SubjectId);
 
-        await _tokenProvider.RevokeAllTokensAsync(request.UserId);
+        await _tokenProvider.RevokeAllTokensAsync(request.SubjectId);
 
-        await _innoshopNotifier.SendUserDeletedNotificationAsync(new() { UserId = request.UserId, DeletedAtUtc = DateTime.UtcNow });
+        await _innoshopNotifier.SendUserDeletedNotificationAsync(new() { UserId = request.SubjectId, DeletedAtUtc = DateTime.UtcNow });
 
         return Result.Success();
     }

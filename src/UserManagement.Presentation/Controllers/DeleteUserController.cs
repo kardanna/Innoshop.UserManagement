@@ -37,7 +37,11 @@ public class DeleteUserController : BaseApiController
             return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
         }
 
-        var query = new DeleteUserCommand(userGuid, request.Password);
+        var query = new DeleteUserCommand(
+            subjectId: userGuid,
+            password: request.Password,
+            requesterId: userGuid
+        );
 
         var response = await _sender.Send(query);
 
@@ -59,7 +63,11 @@ public class DeleteUserController : BaseApiController
             return HandleFailure(Result.Failure(DomainErrors.Authentication.InvalidSubjectClaim));
         }
 
-        var query = new DeleteUserByAdminCommand(id, requesterGuid);
+        var query = new DeleteUserCommand(
+            subjectId: id,
+            password: null,
+            requesterId: requesterGuid
+        );
 
         var response = await _sender.Send(query);
 

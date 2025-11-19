@@ -37,7 +37,7 @@ public class DeactivateUserController : BaseApiController
         }
 
         var command = new DeactivateUserCommand(
-            userId: userGuid,
+            subjectId: userGuid,
             requesterId: userGuid
         );
 
@@ -62,7 +62,7 @@ public class DeactivateUserController : BaseApiController
         }
 
         var command = new DeactivateUserCommand(
-            userId: userId,
+            subjectId: userId,
             requesterId: requesterGuid
         );
 
