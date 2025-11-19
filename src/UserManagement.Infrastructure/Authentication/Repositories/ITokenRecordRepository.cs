@@ -10,4 +10,5 @@ public interface ITokenRecordRepository
     Task<IEnumerable<TokenRecord>> GetAllAsync(Guid userId);
     void Revome(Guid accessTokenId);
     void Revome(string refreshToken);
+    void RevomeRange(IEnumerable<TokenRecord> records);
 }

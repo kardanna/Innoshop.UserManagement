@@ -129,12 +129,13 @@ public class TokenProvider : ITokenProvider
     {
         var token = await _tokenRepository.GetAsync(tokenId);
 
-        if (token == null) return Result.Failure(DomainErrors.Authentication.AccessTokenNotFound);
+        if (token == null) return Result.Success();
 
         _tokenRepository.Revome(tokenId);
 
-        if (token.AccessTokenExpiresAt < DateTime.UtcNow)
+        if (token.AccessTokenExpiresAt > DateTime.UtcNow)
         {
+            //Publish revoked token to redis!!!!!
             await _innoshopNotifier.SendTokenRevokedNotificationAsync(new()
                 {
                     TokenId = token.AccessTokenId,
@@ -145,8 +146,6 @@ public class TokenProvider : ITokenProvider
 
         await _unitOfWork.SaveChangesAsync();
 
-        //Publish revoked token to redis?
-
         return Result.Success();
     }
 
@@ -154,12 +153,12 @@ public class TokenProvider : ITokenProvider
     {
         var tokens = await _tokenRepository.GetAllAsync(userId);
 
-        foreach (var token in tokens)
+        foreach (var token in tokens.Where(t => t.AccessTokenExpiresAt > DateTime.UtcNow))
         {
-            _tokenRepository.Revome(token.AccessTokenId);
-            
-            if (token.AccessTokenExpiresAt < DateTime.UtcNow)
+            if (token.AccessTokenExpiresAt > DateTime.UtcNow)
             {
+                Console.WriteLine($"Revoked unexpired access token '{token.AccessTokenId}' of user '{token.UserId}'");
+                //Publish revoked token to redis!!!!!!
                 await _innoshopNotifier.SendTokenRevokedNotificationAsync(new()
                     {
                         TokenId = token.AccessTokenId,
@@ -169,9 +168,9 @@ public class TokenProvider : ITokenProvider
             }
         }
 
-        await _unitOfWork.SaveChangesAsync();
+        _tokenRepository.RevomeRange(tokens);
 
-        //Publish revoked token to redis?
+        await _unitOfWork.SaveChangesAsync();
 
         return Result.Success();
     }

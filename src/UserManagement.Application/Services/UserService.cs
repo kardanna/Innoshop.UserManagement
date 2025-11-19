@@ -286,15 +286,15 @@ public class UserService : IUserService
         return attempt.AttemptCode;
     }
 
-    public async Task<Result> RestorePasswordAsync(string restoreCode, string newPassword)
+    public async Task<Result<Guid>> RestorePasswordAsync(string restoreCode, string newPassword)
     {
         var restoreAttempt = await _passwordRestoreAttemptRepository.GetAsync(restoreCode);
 
-        if (restoreAttempt is null) return Result.Failure(DomainErrors.PasswordRestore.InvalidOrExpiredRestoreCode);
+        if (restoreAttempt is null) return DomainErrors.PasswordRestore.InvalidOrExpiredRestoreCode;
 
         var attempt = await _passwordPolicy.IsPasswordRestoreAllowed(restoreAttempt);
 
-        if (attempt.IsDenied) return Result.Failure(attempt.Error);
+        if (attempt.IsDenied) return attempt.Error;
 
         restoreAttempt.User.PasswordHash = _hasher.HashPassword(null!, newPassword);
         restoreAttempt.IsSucceeded = true;
@@ -302,7 +302,7 @@ public class UserService : IUserService
         
         await _unitOfWork.SaveChangesAsync();
 
-        return Result.Success();
+        return restoreAttempt.User.Id;
     }
 
     public async Task<bool> IsUserDeacivated(Guid userId)

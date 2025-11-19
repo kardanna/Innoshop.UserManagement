@@ -49,4 +49,9 @@ public class TokenRecordRepository : ITokenRecordRepository
         var records = _appContext.TokenRecords.Where(r => r.RefreshToken == refreshToken);
         _appContext.TokenRecords.RemoveRange(records);
     }
+
+    public void RevomeRange(IEnumerable<TokenRecord> records)
+    {
+        _appContext.TokenRecords.RemoveRange(records);
+    }
 }
