@@ -233,6 +233,21 @@ public class UserService : IUserService
         return Result.Success();
     }
 
+    public async Task<Result> ChangePasswordAsync(ChangePasswordContext context)
+    {
+        var user = await _userRepository.GetAsync(context.UserId);
+        if (user is null) return Result.Failure(DomainErrors.User.NotFound);
+
+        var attempt = await _userPolicy.IsPasswordChangeAllowedAsync(user, context);
+        if (attempt.IsDenied) return Result.Failure(attempt.Error);
+
+        user.PasswordHash = _hasher.HashPassword(null!, context.NewPassword);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result.Success();
+    }
+
     public async Task<bool> IsUserDeacivated(Guid userId)
     {
         var lastDeactivationRecord = await _userDeactivationRepository.GetLatestAsync(userId);

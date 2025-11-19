@@ -13,5 +13,6 @@ public interface IUserService
     Task<Result> DeactivateAsync(Guid subjectId, Guid requesterId);
     Task<Result> ReactivateAsync(Guid subjectId, Guid requesterId);
     Task<Result> DeleteAsync(DeleteUserContext context);
+    Task<Result> ChangePasswordAsync(ChangePasswordContext context);
     Task<bool> IsUserDeacivated(Guid userId);
 }

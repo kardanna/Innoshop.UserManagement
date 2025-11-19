@@ -126,6 +126,15 @@ public class UserPolicy : IUserPolicy
         return PolicyResult.Success;
     }
 
+    public async Task<PolicyResult> IsPasswordChangeAllowedAsync(User user, ChangePasswordContext context)
+    {
+        var passwordMatch = _hasher.VerifyHashedPassword(null!, user.PasswordHash, context.OldPassword);
+
+        if (passwordMatch == PasswordVerificationResult.Failed) return DomainErrors.PasswordChange.EmptyOrWrongPassword;
+
+        return PolicyResult.Success;
+    }
+
     private void RegisterLogginAttempt(string email, string deviceFingerprint)
     {
         _loginRepository.AddAttempt(email, deviceFingerprint);

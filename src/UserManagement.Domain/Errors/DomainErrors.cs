@@ -17,6 +17,14 @@ public static class DomainErrors
         );
     }
 
+    public static class PasswordChange
+    {
+        public static readonly Error EmptyOrWrongPassword = new(
+            "PasswordChange.EmptyOrWrongPassword",
+            "Password is empty or wrong."
+        );
+    }
+
     public static class Deletion
     {
         public static readonly Error NotAdminRequester = new(
