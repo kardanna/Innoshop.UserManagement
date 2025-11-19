@@ -10,4 +10,5 @@ public interface IEmailService
     Task<Result> SendRequestToChangeUserEmailAsync(EmailChangeContext context);
     Task<Result> ConfirmSednedRequestAsync(string verificationCode);
     Task ClearUserRecordsAsync(Guid userId);
+    Task<Result> SendPasswordResorationCode(string email, string code);
 }

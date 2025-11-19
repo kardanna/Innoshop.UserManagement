@@ -9,10 +9,13 @@ public interface IUserService
     Task<Result<User>> LoginAsync(LoginUserContext context);
     Task<Result<User>> RegisterAsync(RegistrationContext context);
     Task<Result<User>> GetAsync(Guid id);
+    Task<Result<User>> GetAsync(string email);
     Task<Result<User>> UpdateAsync(UpdateUserContext context);
     Task<Result> DeactivateAsync(Guid subjectId, Guid requesterId);
     Task<Result> ReactivateAsync(Guid subjectId, Guid requesterId);
     Task<Result> DeleteAsync(DeleteUserContext context);
     Task<Result> ChangePasswordAsync(ChangePasswordContext context);
+    Task<Result<string>> InitiatePasswordRestorationAsync(string userEmail);
+    Task<Result> RestorePasswordAsync(string restoreCode, string newPassword);
     Task<bool> IsUserDeacivated(Guid userId);
 }

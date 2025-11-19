@@ -109,4 +109,10 @@ public class EmailService : IEmailService
         _repository.RemoveAllUserAttempts(userId);
         await _unitOfWork.SaveChangesAsync();
     }
+
+    public async Task<Result> SendPasswordResorationCode(string email, string code)
+    {
+        //return await _emailSender.SendPasswordRestorationEmail(email, code);
+        return Result.Success();
+    }
 }

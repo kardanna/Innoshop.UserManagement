@@ -12,5 +12,4 @@ public interface IUserPolicy
     Task<PolicyResult> IsDeactivationAllowedAsync(User subject, User requester);
     Task<PolicyResult> IsReactivationAllowedAsync(User subject, User requester);
     Task<PolicyResult> IsDeletionAllowedAsync(User subject, User requester, DeleteUserContext context);
-    Task<PolicyResult> IsPasswordChangeAllowedAsync(User user, ChangePasswordContext context);
 }

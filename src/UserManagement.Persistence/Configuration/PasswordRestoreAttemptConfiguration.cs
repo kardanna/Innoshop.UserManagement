@@ -12,10 +12,13 @@ public class PasswordRestoreAttemptConfiguration : IEntityTypeConfiguration<Pass
 
         builder.HasKey(a => a.Id);
 
-        builder.HasAlternateKey(a => a.AttemptCode);
+        builder.HasIndex(a => a.AttemptCode);
 
         builder.HasOne(a => a.User)
             .WithMany()
             .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.Property(a => a.IsSucceeded)
+            .HasDefaultValue(false);
     }
 }

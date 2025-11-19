@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
@@ -12,24 +13,30 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IUserDeactivationRepository _userDeactivationRepository;
+    private readonly IPasswordRestoreAttemptRepository _passwordRestoreAttemptRepository;
     private readonly IPasswordHasher<User> _hasher;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserPolicy _userPolicy;
+    private readonly IPasswordPolicy _passwordPolicy;
     private readonly IInnoshopNotifier _innoshopNotifier;
 
     public UserService(
         IUserRepository userRepository,
         IUserDeactivationRepository userDeactivationRepository,
+        IPasswordRestoreAttemptRepository passwordRestoreAttemptRepository,
         IPasswordHasher<User> hasher,
         IUnitOfWork unitOfWork,
         IUserPolicy userPolicy,
+        IPasswordPolicy passwordPolicy,
         IInnoshopNotifier innoshopNotifier)
     {
         _userRepository = userRepository;
         _userDeactivationRepository = userDeactivationRepository;
+        _passwordRestoreAttemptRepository = passwordRestoreAttemptRepository;
         _hasher = hasher;
         _unitOfWork = unitOfWork;
         _userPolicy = userPolicy;
+        _passwordPolicy = passwordPolicy;
         _innoshopNotifier = innoshopNotifier;
     }
 
@@ -83,6 +90,15 @@ public class UserService : IUserService
     public async Task<Result<User>> GetAsync(Guid id)
     {
         var user = await _userRepository.GetAsync(id);
+
+        if (user is null) return DomainErrors.User.NotFound;
+
+        return Result.Success(user);
+    }
+
+    public async Task<Result<User>> GetAsync(string email)
+    {
+        var user = await _userRepository.GetAsync(email);
 
         if (user is null) return DomainErrors.User.NotFound;
 
@@ -238,7 +254,7 @@ public class UserService : IUserService
         var user = await _userRepository.GetAsync(context.UserId);
         if (user is null) return Result.Failure(DomainErrors.User.NotFound);
 
-        var attempt = await _userPolicy.IsPasswordChangeAllowedAsync(user, context);
+        var attempt = await _passwordPolicy.IsPasswordChangeAllowedAsync(user, context);
         if (attempt.IsDenied) return Result.Failure(attempt.Error);
 
         user.PasswordHash = _hasher.HashPassword(null!, context.NewPassword);
@@ -248,9 +264,58 @@ public class UserService : IUserService
         return Result.Success();
     }
 
+    public async Task<Result<string>> InitiatePasswordRestorationAsync(string userEmail)
+    {
+        var user = await _userRepository.GetAsync(userEmail);
+
+        if (user is null) return DomainErrors.User.NotFound;
+
+        _passwordRestoreAttemptRepository.RemovePreviousUnseccessfulAttempts(user.Id);
+
+        var attempt = new PasswordRestoreAttempt()
+        {
+            AttemptCode = GenerateRestorationCode(),
+            User = user,
+            AttemptedAt = DateTime.UtcNow
+        };
+
+        _passwordRestoreAttemptRepository.Add(attempt);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return attempt.AttemptCode;
+    }
+
+    public async Task<Result> RestorePasswordAsync(string restoreCode, string newPassword)
+    {
+        var restoreAttempt = await _passwordRestoreAttemptRepository.GetAsync(restoreCode);
+
+        if (restoreAttempt is null) return Result.Failure(DomainErrors.PasswordRestore.InvalidOrExpiredRestoreCode);
+
+        var attempt = await _passwordPolicy.IsPasswordRestoreAllowed(restoreAttempt);
+
+        if (attempt.IsDenied) return Result.Failure(attempt.Error);
+
+        restoreAttempt.User.PasswordHash = _hasher.HashPassword(null!, newPassword);
+        restoreAttempt.IsSucceeded = true;
+        restoreAttempt.SucceededAt = DateTime.UtcNow;
+        
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result.Success();
+    }
+
     public async Task<bool> IsUserDeacivated(Guid userId)
     {
         var lastDeactivationRecord = await _userDeactivationRepository.GetLatestAsync(userId);
         return lastDeactivationRecord is not null && lastDeactivationRecord.ReactivatedAt is null;
+    }
+
+    private static string GenerateRestorationCode()
+    {
+        var randomNumber = new byte[256];
+        using var generator = RandomNumberGenerator.Create();
+        generator.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
     }
 }

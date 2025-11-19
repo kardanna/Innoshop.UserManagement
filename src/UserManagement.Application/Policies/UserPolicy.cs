@@ -18,6 +18,7 @@ public class UserPolicy : IUserPolicy
     private readonly IUnitOfWork _unitOfWork;
     private readonly RegistrationOptions _registrationOptions;
     private readonly LoginOptions _loginOptions;
+    private readonly Options.PasswordOptions _passwordOptions;
     private readonly IPasswordHasher<User> _hasher;
 
     public UserPolicy(
@@ -27,6 +28,7 @@ public class UserPolicy : IUserPolicy
         IUnitOfWork unitOfWork,
         IOptions<RegistrationOptions> registrationOptions,
         IOptions<LoginOptions> loginOptions,
+        IOptions<Options.PasswordOptions> passwordOptions,
         IPasswordHasher<User> hasher)
     {
         _userRepository = userRepository;
@@ -35,6 +37,7 @@ public class UserPolicy : IUserPolicy
         _unitOfWork = unitOfWork;
         _registrationOptions = registrationOptions.Value;
         _loginOptions = loginOptions.Value;
+        _passwordOptions = passwordOptions.Value;
         _hasher = hasher;
     }
 
@@ -122,15 +125,6 @@ public class UserPolicy : IUserPolicy
         {
             return DomainErrors.Deletion.EmptyOrWrongPassword;
         }
-
-        return PolicyResult.Success;
-    }
-
-    public async Task<PolicyResult> IsPasswordChangeAllowedAsync(User user, ChangePasswordContext context)
-    {
-        var passwordMatch = _hasher.VerifyHashedPassword(null!, user.PasswordHash, context.OldPassword);
-
-        if (passwordMatch == PasswordVerificationResult.Failed) return DomainErrors.PasswordChange.EmptyOrWrongPassword;
 
         return PolicyResult.Success;
     }

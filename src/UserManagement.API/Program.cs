@@ -55,8 +55,10 @@ public class Program
         builder.Services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
         builder.Services.AddScoped<IEmailVerificationAttemptRepository, EmailVerificationAttemptRepository>();
         builder.Services.AddScoped<IUserDeactivationRepository, UserDeactivationRepository>();
+        builder.Services.AddScoped<IPasswordRestoreAttemptRepository, PasswordRestoreAttemptRepository>();
         builder.Services.AddScoped<IUserPolicy, UserPolicy>();
         builder.Services.AddScoped<IEmailPolicy, EmailPolicy>();
+        builder.Services.AddScoped<IPasswordPolicy, PasswordPolicy>();
 
         //Singletons
         builder.Services.AddSingleton<ISigningKeyCache, SigningKeysCache>();
@@ -76,6 +78,7 @@ public class Program
         builder.Services.ConfigureOptions<RegistrationOptionsSetup>();
         builder.Services.ConfigureOptions<EmailOptionsSetup>();
         builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
+        builder.Services.ConfigureOptions<PasswordOptionsSetup>();
 
         //Hosted services
         builder.Services.AddHostedService<SigningKeyCacheInitializer>();

@@ -18,7 +18,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.LastName)
             .HasMaxLength(30);
         
-        //builder.HasAlternateKey(u => u.Email);
+        builder.HasIndex(u => u.Email);
         builder.Property(u => u.Email)
             .HasMaxLength(256);
 

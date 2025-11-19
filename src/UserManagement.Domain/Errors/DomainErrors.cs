@@ -25,6 +25,14 @@ public static class DomainErrors
         );
     }
 
+    public static class PasswordRestore
+    {
+        public static readonly Error InvalidOrExpiredRestoreCode = new(
+            "PasswordRestore.InvalidOrExpiredRestoreCode",
+            "Restore code is invalid or has expired."
+        );
+    }
+
     public static class Deletion
     {
         public static readonly Error NotAdminRequester = new(
