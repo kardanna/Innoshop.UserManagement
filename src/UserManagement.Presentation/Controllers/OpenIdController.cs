@@ -23,10 +23,17 @@ public class OpenIdController : ControllerBase
     [HttpGet("openid-configuration")]
     public IActionResult GetConfiguration()
     {
+        var issuer = _jwtOptions.Issuer;
+
         var configuration = new
         {
-            issuer = _jwtOptions.Issuer,
-            jwks_uri = $"{_jwtOptions.Issuer}/.well-known/jwks.json"
+            issuer = issuer,
+            jwks_uri = $"{issuer}/.well-known/jwks.json",
+            authorization_endpoint = $"{issuer}/noop",
+            token_endpoint = $"{issuer}/noop",
+            response_types_supported = new[] { "none" },
+            subject_types_supported = new[] { "public" },
+            id_token_signing_alg_values_supported = new[] { "RS256" }
         };
 
         return new JsonResult(configuration);
@@ -35,6 +42,7 @@ public class OpenIdController : ControllerBase
     [HttpGet("jwks.json")]
     public async Task<IActionResult> GetJwks()
     {
-        return new JsonResult(_signingKeysProvider.GetJsonWebKeys());
+        var keys = _signingKeysProvider.GetJsonWebKeys();
+        return new JsonResult( new { keys } );
     }
 }

@@ -75,6 +75,7 @@ public class SigningKeyCacheInitializer : IHostedService
 
         var privateKey = ConvertPemToSecurityKey(
             pem: record.PrivateKeyPem,
+            keyId: record.Id,
             isPemProtected: true
         );
 
@@ -120,7 +121,7 @@ public class SigningKeyCacheInitializer : IHostedService
         };
     }
 
-    private RsaSecurityKey? ConvertPemToSecurityKey(string pem, Guid? keyId = null, bool isPemProtected = false)
+    private RsaSecurityKey? ConvertPemToSecurityKey(string pem, Guid keyId, bool isPemProtected = false)
     {
         var rsa = RSA.Create();
         RsaSecurityKey? securityKey;
@@ -132,13 +133,9 @@ public class SigningKeyCacheInitializer : IHostedService
                 pem = _protector.Unprotect(pem);
             }
             
-            rsa.ImportFromPem(pem);            
-            securityKey = new RsaSecurityKey(rsa);
-
-            if (keyId != null)
-            {
-                securityKey.KeyId = keyId.ToString();
-            }
+            rsa.ImportFromPem(pem);
+            
+            securityKey = new RsaSecurityKey(rsa) { KeyId = keyId.ToString() };
         }
         catch (Exception ex)
         {

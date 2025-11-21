@@ -104,7 +104,7 @@ public class SigningKeyProvider : ISigningKeyProvider
         {
             Id = keyId,
             PrivateKey = new RsaSecurityKey(rsa) { KeyId = keyId.ToString() },
-            PublicKey = new RsaSecurityKey(rsaPublicOnly),
+            PublicKey = new RsaSecurityKey(rsaPublicOnly) { KeyId = keyId.ToString() },
             IssuedAt = DateTime.UtcNow,
             SigningExpiresAt = DateTime.UtcNow.AddDays(_options.SingingKeyLifetimeDays),
             ExpiresAt = DateTime.UtcNow.AddDays(_options.ValidationKeyLifetimeDays)

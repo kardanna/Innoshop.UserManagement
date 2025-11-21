@@ -94,7 +94,6 @@ public static class DomainErrors
             "Token has no token ID claim or claim value is invalid."
         );
 
-
         public static readonly Error AccessTokenNotFound = new(
             "Authentication.AccessTokenNotFound",
             "Requested access token not found."

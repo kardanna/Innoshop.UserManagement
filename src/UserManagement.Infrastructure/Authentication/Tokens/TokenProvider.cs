@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using UserManagement.Application.Interfaces;
@@ -21,19 +22,22 @@ public class TokenProvider : ITokenProvider
     private readonly IUnitOfWork _unitOfWork;
     private readonly JwtOptions _jwtOptions;
     private readonly IInnoshopNotifier _innoshopNotifier;
+    private readonly ILogger<TokenProvider> _logger;
 
     public TokenProvider(
         ITokenRecordRepository tokenRepository,
         ISigningKeyProvider signingKeyProvider,
         IUnitOfWork unitOfWork,
         IOptions<JwtOptions> jwtOptions,
-        IInnoshopNotifier innoshopNotifier)
+        IInnoshopNotifier innoshopNotifier,
+        ILogger<TokenProvider> logger)
     {
         _tokenRepository = tokenRepository;
         _signingKeyProvider = signingKeyProvider;
         _unitOfWork = unitOfWork;
         _jwtOptions = jwtOptions.Value;
         _innoshopNotifier = innoshopNotifier;
+        _logger = logger;
     }
 
     public async Task<Result<LoginUserResponse>> GenerateFromLoginAsync(User user, string deviceFingerprint)
