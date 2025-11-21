@@ -7,8 +7,8 @@ public class Enumeration<T> : IEquatable<Enumeration<T>>
 {
     private static readonly Lazy<Dictionary<int, T>> _dictionary = new(() => PopulateDictionary(typeof(T)));
 
-    public T? GetById(int id) => _dictionary.Value.FirstOrDefault(d => d.Key == id).Value;
-    public T? GetByName(string name) => _dictionary.Value.Values.FirstOrDefault(d => d.Name == name);
+    public static T? GetById(int id) => _dictionary.Value.FirstOrDefault(d => d.Key == id).Value;
+    public static T? GetByName(string name) => _dictionary.Value.Values.FirstOrDefault(d => d.Name == name);
     public static IReadOnlyCollection<T> GetValues() => _dictionary.Value.Values.ToList();
 
     public int Id { get; protected init; }

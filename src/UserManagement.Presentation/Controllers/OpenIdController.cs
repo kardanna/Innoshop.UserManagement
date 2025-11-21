@@ -35,6 +35,6 @@ public class OpenIdController : ControllerBase
     [HttpGet("jwks.json")]
     public async Task<IActionResult> GetJwks()
     {
-        return new JsonResult(await _signingKeysProvider.GetSigningKeyAsync());
+        return new JsonResult(_signingKeysProvider.GetJsonWebKeys());
     }
 }
