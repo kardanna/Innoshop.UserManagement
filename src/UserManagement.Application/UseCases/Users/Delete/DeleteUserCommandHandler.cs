@@ -36,7 +36,12 @@ public class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand>
 
         await _tokenProvider.RevokeAllTokensAsync(request.SubjectId);
 
-        await _innoshopNotifier.SendUserDeletedNotificationAsync(new() { UserId = request.SubjectId, DeletedAtUtc = DateTime.UtcNow });
+        await _innoshopNotifier.SendUserDeletedNotificationAsync(new()
+            {
+                UserId = request.SubjectId,
+                DeletedAtUtc = DateTime.UtcNow
+            }
+        );
 
         return Result.Success();
     }

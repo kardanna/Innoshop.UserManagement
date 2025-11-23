@@ -19,6 +19,7 @@ using UserManagement.Infrastructure.Authentication.Tokens;
 using UserManagement.Infrastructure.Messaging;
 using UserManagement.Persistence;
 using UserManagement.Persistence.Repositories;
+using UserManagement.Infrastructure.Messaging.Abstractions;
 
 namespace UserManagement.API;
 
@@ -77,15 +78,17 @@ public class Program
         builder.Services.ConfigureOptions<LoginOptionsSetup>();
         builder.Services.ConfigureOptions<RegistrationOptionsSetup>();
         builder.Services.ConfigureOptions<EmailOptionsSetup>();
-        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
+        
         builder.Services.ConfigureOptions<PasswordOptionsSetup>();
 
         //Hosted services
         builder.Services.AddHostedService<SigningKeyCacheInitializer>();
 
-        //RabbitMQ
-        builder.Services.AddSingleton<RabbitMQConnection>();
-        builder.Services.AddHostedService<RabbitMQConnectionInitializer>();
+        //RabbitMQ messaging
+        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
+        builder.Services.AddSingleton<IExchangeChannel, RabbitMQChannel>();
+        builder.Services.AddSingleton<UserManagementExchange>();
+        builder.Services.AddHostedService<ExchangeChannelInitializer>();
         builder.Services.AddSingleton<IInnoshopNotifier, InnoshopNotifier>();
 
         //Authentication configuration

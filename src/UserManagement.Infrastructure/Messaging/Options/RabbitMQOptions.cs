@@ -1,4 +1,4 @@
-namespace UserManagement.Infrastructure.Messaging;
+namespace UserManagement.Infrastructure.Messaging.Options;
 
 public class RabbitMQOptions
 {

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
-using UserManagement.Infrastructure.Messaging;
+using UserManagement.Infrastructure.Messaging.Options;
 
-namespace UserManagement.API;
+namespace UserManagement.API.OptionsSetup;
 
 public class RabbitMQOptionsSetup : IConfigureOptions<RabbitMQOptions>
 {

@@ -52,8 +52,6 @@ public class TokenProvider : ITokenProvider
             .ToList();
 
         claims.Add(new(JwtRegisteredClaimNames.Sub, user.Id.ToString()));
-        claims.Add(new(ClaimTypes.Name, user.FirstName));
-        claims.Add(new(ClaimTypes.Surname, user.LastName));
         claims.Add(new(JwtRegisteredClaimNames.Email, user.Email));
         claims.Add(new(JwtRegisteredClaimNames.Jti, tokenRecord.AccessTokenId.ToString()));
 

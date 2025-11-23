@@ -1,8 +1,5 @@
-using System.Text;
-using System.Text.Json;
 using Innoshop.Contracts.UserManagement;
 using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
 using UserManagement.Application.Interfaces;
 
 namespace UserManagement.Infrastructure.Messaging;
@@ -10,50 +7,38 @@ namespace UserManagement.Infrastructure.Messaging;
 public class InnoshopNotifier : IInnoshopNotifier
 {
     private readonly ILogger<InnoshopNotifier> _logger;
-    private IChannel _channel;
+    private readonly UserManagementExchange _exchange;
 
     public InnoshopNotifier(
         ILogger<InnoshopNotifier> logger,
-        RabbitMQConnection connection)
+        UserManagementExchange exchange)
     {
-        if (connection.Channel == null) throw new Exception("");
-        
+
         _logger = logger;
-        _channel = connection.Channel;
+        _exchange = exchange;
     }
 
     public async Task SendTokenRevokedNotificationAsync(TokenRevokedMessage message)
     {
-        await SendNotification(TokenRevokedMessage.QueueName, message);
+        await _exchange.SendMessage(TokenRevokedMessage.RoutingKey, message);
         _logger.LogInformation("Sent notification of revoking access token with ID '{TokenId}'", message.TokenId);
     }
 
     public async Task SendUserDeactivatedNotificationAsync(UserDeactivatedMessage message)
     {
-        await SendNotification(UserDeactivatedMessage.QueueName, message);
+        await _exchange.SendMessage(UserDeactivatedMessage.RoutingKey, message);
         _logger.LogInformation("Sent notification of deactivating user with ID '{UserId}'", message.UserId);
     }
 
     public async Task SendUserReactivatedNotificationAsync(UserReactivatedMessage message)
     {
-        await SendNotification(UserReactivatedMessage.QueueName, message);
+        await _exchange.SendMessage(UserReactivatedMessage.RoutingKey, message);
         _logger.LogInformation("Sent notification of reactivating user with ID '{UserId}'", message.UserId);
     }
 
     public async Task SendUserDeletedNotificationAsync(UserDeletedMessage message)
     {
-        await SendNotification(UserDeletedMessage.QueueName, message);
+        await _exchange.SendMessage(UserDeletedMessage.RoutingKey, message);
         _logger.LogInformation("Sent notification of deleting user with ID '{UserId}'", message.UserId);
-    }
-
-    private async Task SendNotification(string queue, object notification)
-    {
-        var json = JsonSerializer.Serialize(notification);
-        var body = Encoding.UTF8.GetBytes(json);
-        await _channel.BasicPublishAsync(
-            exchange: string.Empty,
-            routingKey: queue,
-            body: body
-        );
     }
 }
