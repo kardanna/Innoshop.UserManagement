@@ -138,12 +138,6 @@ public class TokenProvider : ITokenProvider
         if (token.AccessTokenExpiresAt > DateTime.UtcNow)
         {
             //Publish revoked token to redis!!!!!
-            await _innoshopNotifier.SendTokenRevokedNotificationAsync(new()
-                {
-                    TokenId = token.AccessTokenId,
-                    TokenExpiresAtUtc = token.AccessTokenExpiresAt
-                }
-            );
         }
 
         await _unitOfWork.SaveChangesAsync();
@@ -161,12 +155,7 @@ public class TokenProvider : ITokenProvider
             {
                 Console.WriteLine($"Revoked unexpired access token '{token.AccessTokenId}' of user '{token.UserId}'");
                 //Publish revoked token to redis!!!!!!
-                await _innoshopNotifier.SendTokenRevokedNotificationAsync(new()
-                    {
-                        TokenId = token.AccessTokenId,
-                        TokenExpiresAtUtc = token.AccessTokenExpiresAt
-                    }
-                );
+
             }
         }
 

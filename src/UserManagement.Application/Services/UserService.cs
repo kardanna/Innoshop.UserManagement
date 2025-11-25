@@ -166,7 +166,7 @@ public class UserService : IUserService
         await _innoshopNotifier.SendUserDeactivatedNotificationAsync(new()
             {
                 UserId = subject.Id,
-                DeactivatedAtUtc = deactivationRecord.DeactivatedAt
+                TimeStamp = deactivationRecord.DeactivatedAt
             }
         );
 
@@ -206,7 +206,7 @@ public class UserService : IUserService
         await _innoshopNotifier.SendUserReactivatedNotificationAsync(new()
             {
                 UserId = subject.Id,
-                ReactivatedAtUtc = DateTime.UtcNow
+                TimeStamp = DateTime.UtcNow
             }
         );
 

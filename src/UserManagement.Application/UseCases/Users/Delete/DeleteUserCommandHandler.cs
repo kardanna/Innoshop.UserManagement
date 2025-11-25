@@ -39,7 +39,7 @@ public class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand>
         await _innoshopNotifier.SendUserDeletedNotificationAsync(new()
             {
                 UserId = request.SubjectId,
-                DeletedAtUtc = DateTime.UtcNow
+                TimeStamp = DateTime.UtcNow
             }
         );
 

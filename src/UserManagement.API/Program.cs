@@ -86,9 +86,14 @@ public class Program
 
         //RabbitMQ messaging
         builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
-        builder.Services.AddSingleton<IExchangeChannel, RabbitMQChannel>();
-        builder.Services.AddSingleton<UserManagementExchange>();
-        builder.Services.AddHostedService<ExchangeChannelInitializer>();
+        builder.Services.AddSingleton<RabbitMQConnectionProvider>();
+        builder.Services.AddSingleton<IRabbitMQConnectionProvider>(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
+        builder.Services.AddSingleton<RabbitMQConfigurator>();
+        builder.Services.AddSingleton<IRabbitMQConfigurator>(sp => sp.GetRequiredService<RabbitMQConfigurator>());
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQConfigurator>());
+        builder.Services.AddSingleton<UserEventsExchange>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<UserEventsExchange>());
         builder.Services.AddSingleton<IInnoshopNotifier, InnoshopNotifier>();
 
         //Authentication configuration
