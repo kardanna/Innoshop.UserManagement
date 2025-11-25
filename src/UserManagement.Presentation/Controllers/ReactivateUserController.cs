@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace UserManagement.Presentation.Controllers;
 
-[Route("user")]
+[Route("users")]
 public class ReactivateUserController : BaseApiController
 {
     private readonly ILogger<ReactivateUserController> _logger;

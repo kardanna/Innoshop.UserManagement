@@ -5,7 +5,7 @@ namespace UserManagement.API.OptionsSetup;
 
 public class SigningKeyOptionsSetup : IConfigureOptions<SigningKeyOptions>
 {
-    private const string SectionName = "SigningKeyOptions";
+    private const string SectionName = "Authentication:SigningKeyOptions";
     private readonly IConfiguration _configuration;
 
     public SigningKeyOptionsSetup(IConfiguration configuration)

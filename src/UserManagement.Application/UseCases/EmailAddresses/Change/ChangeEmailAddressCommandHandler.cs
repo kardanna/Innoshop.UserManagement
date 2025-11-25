@@ -9,13 +9,16 @@ public class ChangeEmailAddressCommandHandler : ICommandHandler<ChangeEmailAddre
 {
     private readonly IEmailService _emailService;
     private readonly IUserService _userService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public ChangeEmailAddressCommandHandler(
         IEmailService emailService,
-        IUserService userService)
+        IUserService userService,
+        IUnitOfWork unitOfWork)
     {
         _emailService = emailService;
         _userService = userService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(ChangeEmailAddressCommand request, CancellationToken cancellationToken)
@@ -27,6 +30,8 @@ public class ChangeEmailAddressCommandHandler : ICommandHandler<ChangeEmailAddre
         var context = new EmailChangeContext(user, request.NewEmail);
 
         var response = await _emailService.SendRequestToChangeUserEmailAsync(context);
+
+        if (response.IsSuccess) await _unitOfWork.SaveChangesAsync();
 
         return response;
     }

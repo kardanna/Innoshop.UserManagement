@@ -30,6 +30,8 @@ public class EmailPolicy : IEmailPolicy
 
     public async Task<PolicyResult> IsConfirmationAllowedAsync(EmailVerificationAttempt attempt)
     {
+        if (attempt.IsSucceeded) return DomainErrors.EmailVerification.CodeExpiredOrNotFound;
+        
         var isExpiredCode = attempt.AttemptedAt < DateTime.UtcNow.AddHours(-_options.VerificationCodeLifetimeInHours);
         if (isExpiredCode)
         {

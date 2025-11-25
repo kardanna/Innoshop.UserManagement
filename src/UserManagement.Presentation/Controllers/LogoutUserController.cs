@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace UserManagement.Presentation.Controllers;
 
-[Route("user")]
+[Route("users")]
 public class LogoutUserController : BaseApiController
 {
     private readonly ILogger<LogoutUserController> _logger;

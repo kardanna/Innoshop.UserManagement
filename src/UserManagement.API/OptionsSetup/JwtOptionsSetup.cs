@@ -5,7 +5,7 @@ namespace UserManagement.API.OptionsSetup;
 
 public class JwtOptionsSetup : IConfigureOptions<JwtOptions>
 {
-    private const string SectionName = "Jwt";
+    private const string SectionName = "Authentication:Jwt";
     private readonly IConfiguration _configuration;
 
     public JwtOptionsSetup(IConfiguration configuration)

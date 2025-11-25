@@ -34,7 +34,7 @@ public class RegisterAdminCommandHandler : ICommandHandler<RegisterAdminCommand,
 
         if (user.IsFailure) return user.Error;
 
-        await _emailService.SendRequestToVerifyUserEmailAsync(user.Value);
+        await _emailService.SendRequestToVerifyUserAccountAsync(user.Value);
 
         var response = new GetUserResponse(
             user.Value.Id,

@@ -10,17 +10,20 @@ public class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand>
     private readonly IUserService _userService;
     private readonly IEmailService _emailService;
     private readonly ITokenProvider _tokenProvider;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IInnoshopNotifier _innoshopNotifier;
 
     public DeleteUserCommandHandler(
         IUserService userService,
         IEmailService emailService,
         ITokenProvider tokenProvider,
+        IUnitOfWork unitOfWork,
         IInnoshopNotifier innoshopNotifier)
     {
         _userService = userService;
         _emailService = emailService;
         _tokenProvider = tokenProvider;
+        _unitOfWork = unitOfWork;
         _innoshopNotifier = innoshopNotifier;
     }
 
@@ -33,6 +36,8 @@ public class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand>
         if (result.IsFailure) return result;
 
         await _emailService.ClearUserRecordsAsync(request.SubjectId);
+
+        await _unitOfWork.SaveChangesAsync();
 
         await _tokenProvider.RevokeAllTokensAsync(request.SubjectId);
 

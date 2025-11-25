@@ -5,7 +5,7 @@ namespace UserManagement.API.OptionsSetup;
 
 public class LoginOptionsSetup : IConfigureOptions<LoginOptions>
 {
-    private const string SECTION_NAME = "LoginOptions"; 
+    private const string SECTION_NAME = "UserManagement:LoginOptions"; 
     private readonly IConfiguration _configuration;
 
     public LoginOptionsSetup(IConfiguration configuration)

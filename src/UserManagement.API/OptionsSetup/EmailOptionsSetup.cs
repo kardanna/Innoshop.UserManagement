@@ -5,7 +5,7 @@ namespace UserManagement.API.OptionsSetup;
 
 public class EmailOptionsSetup : IConfigureOptions<EmailOptions>
 {
-    private const string SECTION_NAME = "EmailOptions";
+    private const string SECTION_NAME = "UserManagement:EmailOptions";
     private readonly IConfiguration _configuration;
 
     public EmailOptionsSetup(IConfiguration configuration)

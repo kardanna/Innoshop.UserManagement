@@ -5,7 +5,7 @@ namespace UserManagement.API.OptionsSetup;
 
 public class PasswordOptionsSetup : IConfigureOptions<PasswordOptions>
 {
-    private const string SECTION_NAME = "PasswordOptions";
+    private const string SECTION_NAME = "UserManagement:PasswordOptions";
     private readonly IConfiguration _configuration;
 
     public PasswordOptionsSetup(IConfiguration configuration)

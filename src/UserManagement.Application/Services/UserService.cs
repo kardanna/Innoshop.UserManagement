@@ -311,11 +311,16 @@ public class UserService : IUserService
         return lastDeactivationRecord is not null && lastDeactivationRecord.ReactivatedAt is null;
     }
 
-    private static string GenerateRestorationCode()
+    private static string GenerateRestorationCode(int size = 32)
     {
-        var randomNumber = new byte[256];
+        var randomNumber = new byte[size];
         using var generator = RandomNumberGenerator.Create();
         generator.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
+        var base64 = Convert.ToBase64String(randomNumber)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
+
+        return base64;
     }
 }

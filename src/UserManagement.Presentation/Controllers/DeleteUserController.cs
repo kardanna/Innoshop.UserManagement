@@ -11,7 +11,7 @@ using UserManagement.Application.UseCases.Users.Delete;
 
 namespace UserManagement.Presentation.Controllers;
 
-[Route("user")]
+[Route("users")]
 public class DeleteUserController : BaseApiController
 {
     private readonly ILogger<DeleteUserController> _logger;

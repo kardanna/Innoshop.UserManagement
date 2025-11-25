@@ -5,7 +5,7 @@ namespace UserManagement.API.OptionsSetup;
 
 public class RegistrationOptionsSetup : IConfigureOptions<RegistrationOptions>
 {
-    private const string SECTION_NAME = "RegistrationOptions";
+    private const string SECTION_NAME = "UserManagement:RegistrationOptions";
     private readonly IConfiguration _configuration;
 
     public RegistrationOptionsSetup(IConfiguration configuration)

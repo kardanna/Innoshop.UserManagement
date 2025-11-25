@@ -11,13 +11,16 @@ public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, G
 {
     private readonly IUserService _userService;
     private readonly IEmailService _emailService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public RegisterUserCommandHandler(
         IUserService userService,
-        IEmailService emailService)
+        IEmailService emailService,
+        IUnitOfWork unitOfWork)
     {
         _userService = userService;
         _emailService = emailService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<GetUserResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -28,7 +31,11 @@ public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, G
 
         if (user.IsFailure) return user.Error;
 
-        await _emailService.SendRequestToVerifyUserEmailAsync(user.Value);
+        var sendEmailResult = await _emailService.SendRequestToVerifyUserAccountAsync(user.Value);
+
+        if (sendEmailResult.IsFailure) return sendEmailResult.Error;
+
+        await _unitOfWork.SaveChangesAsync();
 
         var response = new GetUserResponse(
             user.Value.Id,

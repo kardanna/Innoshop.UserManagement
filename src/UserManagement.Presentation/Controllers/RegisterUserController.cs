@@ -12,7 +12,7 @@ using UserManagement.Domain.Shared;
 
 namespace UserManagement.Presentation.Controllers;
 
-[Route("user")]
+[Route("users")]
 public class RegisterUserController : BaseApiController
 {
     private readonly ILogger<RegisterUserController> _logger;

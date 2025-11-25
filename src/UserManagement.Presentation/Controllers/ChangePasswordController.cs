@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace UserManagement.Presentation.Controllers;
 
-[Route("user")]
+[Route("users")]
 public class ChangePasswordController : BaseApiController
 {
     private readonly ILogger<ChangePasswordController> _logger;

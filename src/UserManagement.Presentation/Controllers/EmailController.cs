@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace UserManagement.Presentation.Controllers;
 
-[Route("user/email")]
+[Route("users/email")]
 public class EmailController : BaseApiController
 {
     private readonly ILogger<EmailController> _logger;
@@ -25,10 +25,10 @@ public class EmailController : BaseApiController
     }
 
  
-    [HttpPost("verify")]
-    public async Task<IActionResult> Post([FromBody] VerifyEmailRequest request)
+    [HttpGet("verify/{code:required}")]
+    public async Task<IActionResult> VerifyEmail(string code)
     {
-        var command = new VerifyEmailAddressCommand(request.VerificationCode);
+        var command = new VerifyEmailAddressCommand(code);
 
         var response = await _sender.Send(command);
 
@@ -39,7 +39,7 @@ public class EmailController : BaseApiController
     
     [Authorize]
     [HttpPost("change")]
-    public async Task<IActionResult> Post([FromBody] ChangeEmailRequest request)
+    public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailRequest request)
     {
         foreach (var claim in HttpContext.User.Claims)
         {

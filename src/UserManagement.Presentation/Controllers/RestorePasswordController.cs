@@ -8,7 +8,7 @@ using UserManagement.Presentation.DTOs;
 
 namespace UserManagement.Presentation.Controllers;
 
-[Route("user")]
+[Route("users")]
 public class RestorePasswordController : BaseApiController
 {
     private readonly ILogger<ChangePasswordController> _logger;

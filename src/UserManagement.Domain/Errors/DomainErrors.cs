@@ -124,6 +124,11 @@ public static class DomainErrors
             "Email.EmailUnverified",
             "Can not login with unverified account."
         );
+
+        public static readonly Error FailedToSend = new(
+            "Email.FailedToSend",
+            "Failed to send email to user."
+        );
     }
 
     public static class EmailVerification

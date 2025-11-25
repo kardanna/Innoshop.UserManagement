@@ -20,6 +20,7 @@ using UserManagement.Infrastructure.Messaging;
 using UserManagement.Persistence;
 using UserManagement.Persistence.Repositories;
 using UserManagement.Infrastructure.Messaging.Abstractions;
+using UserManagement.Infrastructure.EmailSender;
 
 namespace UserManagement.API;
 
@@ -95,6 +96,18 @@ public class Program
         builder.Services.AddSingleton<UserEventsExchange>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<UserEventsExchange>());
         builder.Services.AddSingleton<IInnoshopNotifier, InnoshopNotifier>();
+
+        //Email sender
+        builder.Services
+            .AddFluentEmail(
+                builder.Configuration["UserManagement:EmailOptions:EmailSender"],
+                builder.Configuration["UserManagement:EmailOptions:Sender"]
+            )
+            .AddSmtpSender(
+                builder.Configuration["Papercut:HostName"],
+                builder.Configuration.GetValue<int>("Papercut:Port")
+            );
+        builder.Services.AddTransient<IEmailSender, EmailSender>();
 
         //Authentication configuration
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
