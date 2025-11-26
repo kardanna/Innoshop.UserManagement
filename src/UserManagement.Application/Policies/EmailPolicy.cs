@@ -32,42 +32,28 @@ public class EmailPolicy : IEmailPolicy
     {
         if (attempt.IsSucceeded) return DomainErrors.EmailVerification.CodeExpiredOrNotFound;
         
-        var isExpiredCode = attempt.AttemptedAt < DateTime.UtcNow.AddHours(-_options.VerificationCodeLifetimeInHours);
-        if (isExpiredCode)
-        {
-            return DomainErrors.EmailVerification.CodeExpiredOrNotFound;
-        }
+        if (IsVerificationCodeExpired(attempt)) return DomainErrors.EmailVerification.CodeExpiredOrNotFound;
 
-        if (attempt.PreviousEmail == null) return PolicyResult.Success; //means it's not a change but initial confirmation
-
-        var isEmailStillAvailable = await _userRepository.CountUsersWithEmailAsync(attempt.Email) == 0;
-
-        if (!isEmailStillAvailable) return DomainErrors.Email.EmailAlreadyInUse;
+        if (!await IsEmailAvailable(attempt.Email)) return DomainErrors.Email.EmailAlreadyInUse;
 
         return PolicyResult.Success;
     }
 
     public async Task<PolicyResult> IsEmailChangeAllowed(EmailChangeContext context)
     {
+        if (context.User.IsDeleted) return DomainErrors.User.NotFound;
+
         if (await IsUserDeacivated(context.User.Id)) return DomainErrors.User.Deactivated;
 
         var isTheSameEmail = context.User.Email == context.NewEmail;
 
         if (isTheSameEmail) return DomainErrors.EmailChange.TheSameEmail;
 
-        var isEmailAvailable = await _userRepository.CountUsersWithEmailAsync(context.NewEmail) == 0;
+        if (!await IsEmailAvailable(context.NewEmail)) return DomainErrors.Email.EmailAlreadyInUse;
 
-        if (!isEmailAvailable) return DomainErrors.Email.EmailAlreadyInUse;
+        var lastAttempt = await _emailVerificationAttemptRepository.GetLastSuccessfulAttemptAsync(context.User.Email);
 
-        var lastAttempt = await _emailVerificationAttemptRepository
-            .GetLastSuccessfulAttemptAsync(context.NewEmail);
-        
-        if (lastAttempt is null) return PolicyResult.Success;
-
-        var isTooOften = lastAttempt.AttemptedAt
-            > DateTime.UtcNow.AddHours(-_options.UserCanChangeEmailOnceInHowManyHours);
-
-        if (isTooOften) return DomainErrors.EmailChange.TooOften;
+        if (IsTooManyAttempts(lastAttempt)) return DomainErrors.EmailChange.TooOften;
 
         return PolicyResult.Success;
     }
@@ -76,5 +62,21 @@ public class EmailPolicy : IEmailPolicy
     {
         var lastDeactivationRecord = await _userDeactivationRepository.GetLatestAsync(userId);
         return lastDeactivationRecord is not null && lastDeactivationRecord.ReactivatedAt is null;
+    }
+
+    private bool IsVerificationCodeExpired(EmailVerificationAttempt attempt)
+    {
+        return attempt.AttemptedAt < DateTime.UtcNow.AddHours(-_options.VerificationCodeLifetimeInHours);
+    }
+
+    private async Task<bool> IsEmailAvailable(string email)
+    {
+        return await _userRepository.CountUsersWithEmailAsync(email) == 0;
+    }
+
+    private bool IsTooManyAttempts(EmailVerificationAttempt? attempt)
+    {
+        return attempt is not null && attempt.AttemptedAt
+            > DateTime.UtcNow.AddHours(-_options.UserCanChangeEmailOnceInHowManyHours);
     }
 }
