@@ -77,16 +77,18 @@ public class EmailSender : IEmailSender
         }
     }
 
-    public async Task<Result> SendPasswordRestorationMessageAsync(string email, string code)
+    public async Task<Result> SendPasswordRestorationMessageAsync(string email, string code, string? endpoint = null)
     {
         try
         {
             _logger.LogInformation("Attempting to send password restoration message to '{EmailAddress}'...", email);
 
+            endpoint ??= "Unavailable";
+
             await _fluentEmail
                 .To(email)
                 .Subject("Innoshop password restore")
-                .Body($"To restore your password provide 'NewPassword' field and the following 'RestoreCode' in a POST request's body to this endpoint: verificationUrl. Restore code: '{code}'.") //INSERT URL
+                .Body($"To restore your password provide 'NewPassword' field and the following 'RestoreCode' in a POST request's body to this endpoint: '{endpoint}'. Restore code: '{code}'.") //INSERT URL
                 .SendAsync();
             
             _logger.LogInformation("Successfully sent password restoration message to '{EmailAddress}'.", email);

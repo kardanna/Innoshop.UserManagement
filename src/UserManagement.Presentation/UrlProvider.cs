@@ -30,4 +30,15 @@ public class UrlProvider : IUrlProvider
             values: new { code = verificationCode }
         );
     }
+
+    public string? GetUrlForPasswordRestoreEndpoint()
+    {
+        if (_httpContextAccessor.HttpContext is null) return null;
+
+        return _linkGenerator.GetUriByAction(
+            httpContext: _httpContextAccessor.HttpContext,
+            action: nameof(RestorePasswordController.RestorePassword),
+            controller: nameof(RestorePasswordController).Replace("Controller", "")
+        );
+    }
 }

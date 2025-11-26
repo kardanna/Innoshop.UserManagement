@@ -13,7 +13,6 @@ namespace UserManagement.Application.Services;
 public class EmailService : IEmailService
 {
     private readonly IEmailVerificationAttemptRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailPolicy _emailPolicy;
     private readonly IEmailSender _emailSender;
     private readonly EmailOptions _emailOptions;
@@ -21,14 +20,12 @@ public class EmailService : IEmailService
 
     public EmailService(
         IEmailVerificationAttemptRepository repository,
-        IUnitOfWork unitOfWork,
         IEmailPolicy emailPolicy,
         IEmailSender emailSender,
         IOptions<EmailOptions> emailOptions,
         IUrlProvider urlProvider)
     {
         _repository = repository;
-        _unitOfWork = unitOfWork;
         _emailPolicy = emailPolicy;
         _emailSender = emailSender;
         _emailOptions = emailOptions.Value;
@@ -80,7 +77,7 @@ public class EmailService : IEmailService
     {
         var attemptRecord = await _repository.GetAsync(verificationCode);
 
-        if (attemptRecord == null) return Result.Failure(DomainErrors.EmailVerification.CodeExpiredOrNotFound);
+        if (attemptRecord is null) return Result.Failure(DomainErrors.EmailVerification.CodeExpiredOrNotFound);
 
         var attempt = await _emailPolicy.IsConfirmationAllowedAsync(attemptRecord);
 
@@ -98,8 +95,6 @@ public class EmailService : IEmailService
         {
             attemptRecord.User.Email = attemptRecord.Email;
         }
-
-        await _unitOfWork.SaveChangesAsync();
 
         return Result.Success();
     }
@@ -124,8 +119,8 @@ public class EmailService : IEmailService
 
     public async Task<Result> SendPasswordResorationCode(string email, string code)
     {
-        //var verificationUrl = $"{_emailOptions.PasswordRestoreCallbackUrl}/{code}";
+        string? endpoint = _urlProvider.GetUrlForPasswordRestoreEndpoint();
 
-        return await _emailSender.SendPasswordRestorationMessageAsync(email, code);
+        return await _emailSender.SendPasswordRestorationMessageAsync(email, code, endpoint);
     }
 }
