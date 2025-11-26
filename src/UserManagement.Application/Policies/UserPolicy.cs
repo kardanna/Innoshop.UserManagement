@@ -15,80 +15,68 @@ public class UserPolicy : IUserPolicy
     private readonly IUserRepository _userRepository;
     private readonly ILoginAttemptRepository _loginRepository;
     private readonly IUserDeactivationRepository _userDeactivationRepository;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly RegistrationOptions _registrationOptions;
     private readonly LoginOptions _loginOptions;
-    private readonly Options.PasswordOptions _passwordOptions;
     private readonly IPasswordHasher<User> _hasher;
 
     public UserPolicy(
         IUserRepository userRepository,
         ILoginAttemptRepository loginRepository,
         IUserDeactivationRepository userDeactivationRepository,
-        IUnitOfWork unitOfWork,
         IOptions<RegistrationOptions> registrationOptions,
         IOptions<LoginOptions> loginOptions,
-        IOptions<Options.PasswordOptions> passwordOptions,
         IPasswordHasher<User> hasher)
     {
         _userRepository = userRepository;
         _loginRepository = loginRepository;
         _userDeactivationRepository = userDeactivationRepository;
-        _unitOfWork = unitOfWork;
         _registrationOptions = registrationOptions.Value;
         _loginOptions = loginOptions.Value;
-        _passwordOptions = passwordOptions.Value;
         _hasher = hasher;
     }
 
     public async Task<PolicyResult> IsRegistrationAllowedAsync(RegistrationContext context)
     {
-        var isOfLegalAge = context.DateOfBirth
-            < DateOnly.FromDateTime(DateTime.Now.AddYears(-_registrationOptions.MustBeAtLeastYears));
-        if (!isOfLegalAge) return DomainErrors.Register.IllegalAge;
+        if (!IsOfLegalAge(context.DateOfBirth)) return DomainErrors.Register.IllegalAge;
 
-        var isEmailAvailable = await _userRepository.CountUsersWithEmailAsync(context.Email) == 0;
-        if (!isEmailAvailable) return DomainErrors.Email.EmailAlreadyInUse;
+        if (!await IsEmailAvailable(context.Email)) return DomainErrors.Email.EmailAlreadyInUse;
 
         return PolicyResult.Success;
     }
 
     public async Task<PolicyResult> IsUpdateAllowedAsync(User user, UpdateUserContext context)
     {
+        if (user.IsDeleted) return DomainErrors.User.NotFound;
+        
         if (!user.IsEmailVerified) return DomainErrors.Email.EmailUnverified;
 
-        if (await IsUserDeacivated(user.Id)) return DomainErrors.User.Deactivated;
+        if (!IsOfLegalAge(context.DateOfBirth)) return DomainErrors.Register.IllegalAge;
 
-        var isOfLegalAge = context.DateOfBirth
-            < DateOnly.FromDateTime(DateTime.Now.AddYears(-_registrationOptions.MustBeAtLeastYears));
-        if (!isOfLegalAge) return DomainErrors.Register.IllegalAge;
+        if (await IsUserDeacivated(user.Id)) return DomainErrors.User.Deactivated;
 
         return PolicyResult.Success;
     }
 
     public async Task<PolicyResult> IsLoginAllowedAsync(User user, LoginUserContext context)
     {
+        if (user.IsDeleted) return DomainErrors.User.NotFound;
+
         if (!user.IsEmailVerified) return DomainErrors.Email.EmailUnverified;
-        
-        var numberOfAttempts = await _loginRepository
-            .CountLoginAttemptsAsync(user.Email, _loginOptions.LoginAttemptsTimeWindowInMinutes);
-        
-        var tooMuchAttempts = numberOfAttempts > _loginOptions.LoginAttemptsMaxCount;
-        if (tooMuchAttempts) return DomainErrors.Login.TooManyAttempts;
 
-        RegisterLogginAttempt(user.Email, context.DeviceFingerprint);
-
-        await _unitOfWork.SaveChangesAsync();
+        if (!IsPasswordMatches(user, context.Password)) return DomainErrors.Login.WrongEmailOrPassword;
+        
+        if (await IsLoginAttemptsDepleted(context.Email)) return DomainErrors.Login.TooManyAttempts;
         
         return PolicyResult.Success;
     }
 
     public async Task<PolicyResult> IsDeactivationAllowedAsync(User subject, User requester)
-    {       
+    {
+        if (subject.IsDeleted || requester.IsDeleted) return DomainErrors.User.NotFound;
+
         if (HasAdminRole(subject)) return DomainErrors.Deactivation.CannotDeactivateAdmin;
 
-        var notAuthorized = subject.Id != requester.Id && !HasAdminRole(requester);
-        if (notAuthorized) return DomainErrors.Deactivation.NotAdminRequester;
+        if (!IsDeactivationRequesterAuthorized(subject, requester)) return DomainErrors.Deactivation.NotAdminRequester;
         
         if (await IsUserDeacivated(subject.Id)) return DomainErrors.Deactivation.AlreadyDeactivated;
 
@@ -97,41 +85,32 @@ public class UserPolicy : IUserPolicy
 
     public async Task<PolicyResult> IsReactivationAllowedAsync(User subject, User requester)
     {
+        if (subject.IsDeleted || requester.IsDeleted) return DomainErrors.User.NotFound;
+
         if (HasAdminRole(subject)) return DomainErrors.Reactivation.CannotReactivateAdmin;
         
         var record = await _userDeactivationRepository.GetLatestAsync(subject.Id);
         
-        var isSubjectDeactivated = record is not null && record.ReactivatedAt is null;
-        
-        if (!isSubjectDeactivated) return DomainErrors.Reactivation.AlreadyReactivated;
+        if (!IsUserDeacivated(record)) return DomainErrors.Reactivation.AlreadyReactivated;
 
-        var notAuthorized = HasAdminRole(record!.DeactivationRequester) && !HasAdminRole(requester);
-        if (notAuthorized) return DomainErrors.Reactivation.NotAdminRequester;
+        if (!IsReactivationRequesterAuthorized(record!, requester)) return DomainErrors.Reactivation.NotAuthorized;
 
         return PolicyResult.Success;
     }
 
     public async Task<PolicyResult> IsDeletionAllowedAsync(User subject, User requester, DeleteUserContext context)
     {
+        if (subject.IsDeleted || requester.IsDeleted) return DomainErrors.User.NotFound;
+
         if (subject != requester && HasAdminRole(requester)) return PolicyResult.Success;
 
         if (subject != requester && !HasAdminRole(requester)) return DomainErrors.Deletion.NotAdminRequester;
 
-        if (context.Password is null) return DomainErrors.Deletion.EmptyOrWrongPassword;
+        if (string.IsNullOrWhiteSpace(context.Password)) return DomainErrors.Deletion.EmptyOrWrongPassword;
 
-        var passwordMatch = _hasher.VerifyHashedPassword(null!, subject.PasswordHash, context.Password);
-
-        if (passwordMatch == PasswordVerificationResult.Failed)
-        {
-            return DomainErrors.Deletion.EmptyOrWrongPassword;
-        }
+        if (!IsPasswordMatches(subject, context.Password)) return DomainErrors.Deletion.EmptyOrWrongPassword;
 
         return PolicyResult.Success;
-    }
-
-    private void RegisterLogginAttempt(string email, string deviceFingerprint)
-    {
-        _loginRepository.AddAttempt(email, deviceFingerprint);
     }
 
     private async Task<bool> IsUserDeacivated(Guid userId)
@@ -140,8 +119,50 @@ public class UserPolicy : IUserPolicy
         return lastDeactivationRecord is not null && lastDeactivationRecord.ReactivatedAt is null;
     }
 
+    private bool IsUserDeacivated(UserDeactivation? record)
+    {
+        return record is not null && record.ReactivatedAt is null;
+    }
+
     private bool HasAdminRole(User user)
     {
         return user.Roles.Any(r => r == Role.Administrator);
+    }
+
+    private bool IsOfLegalAge(DateOnly dob)
+    {
+        return dob < DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-_registrationOptions.MustBeAtLeastYears));
+    }
+
+    private async Task<bool> IsEmailAvailable(string email)
+    {
+        return await _userRepository.CountUsersWithEmailAsync(email) == 0;
+    }
+
+    private async Task<bool> IsLoginAttemptsDepleted(string email)
+    {
+        var numberOfAttempts = await _loginRepository
+            .CountLoginAttemptsAsync(email, _loginOptions.LoginAttemptsTimeWindowInMinutes);
+        
+        return numberOfAttempts > _loginOptions.LoginAttemptsMaxCount;
+    }
+
+    private bool IsPasswordMatches(User user, string password)
+    {
+        var passwordMatch = _hasher.VerifyHashedPassword(null!, user.PasswordHash, password);
+
+        if (passwordMatch == PasswordVerificationResult.Failed) return false;
+
+        return true;
+    }
+
+    private bool IsDeactivationRequesterAuthorized(User subject, User requester)
+    {
+        return subject.Id == requester.Id || HasAdminRole(requester);
+    }
+
+    private bool IsReactivationRequesterAuthorized(UserDeactivation record, User requester)
+    {
+        return record.DeactivationRequester.Id == requester.Id || HasAdminRole(requester);
     }
 }

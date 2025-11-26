@@ -8,13 +8,16 @@ public class RestorePasswordCommandHandler : ICommandHandler<RestorePasswordComm
 {
     private readonly IUserService _userService;
     private readonly ITokenProvider _tokenProvider;
+    private readonly IUnitOfWork _unitOfWork;
 
     public RestorePasswordCommandHandler(
         IUserService userService,
-        ITokenProvider tokenProvider)
+        ITokenProvider tokenProvider,
+        IUnitOfWork unitOfWork)
     {
         _userService = userService;
         _tokenProvider = tokenProvider;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(RestorePasswordCommand request, CancellationToken cancellationToken)
@@ -26,6 +29,10 @@ public class RestorePasswordCommandHandler : ICommandHandler<RestorePasswordComm
 
         if (response.IsFailure) return response;
 
-        return await _tokenProvider.RevokeAllTokensAsync(response.Value);
+        await _tokenProvider.RevokeAllTokensAsync(response.Value);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return response;
     }
 }

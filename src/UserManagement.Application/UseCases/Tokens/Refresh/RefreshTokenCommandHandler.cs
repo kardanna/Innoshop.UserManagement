@@ -8,14 +8,22 @@ namespace UserManagement.Application.UseCases.Tokens.Refresh;
 public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, LoginUserResponse>
 {
     private readonly ITokenProvider _tokenService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public RefreshTokenCommandHandler(ITokenProvider tokenService)
+    public RefreshTokenCommandHandler(
+        ITokenProvider tokenService,
+        IUnitOfWork unitOfWork)
     {
         _tokenService = tokenService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LoginUserResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        return await _tokenService.GenerateFromRefreshTokenAsync(request.RefreshToken);
+        var result = await _tokenService.GenerateFromRefreshTokenAsync(request.RefreshToken);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return result;
     }
 }

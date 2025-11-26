@@ -2,7 +2,7 @@ using UserManagement.Application.Messaging;
 
 namespace UserManagement.Application.UseCases.EmailAddresses.Verify;
 
-public class VerifyEmailAddressCommand : ICommand
+public record VerifyEmailAddressCommand : ICommand
 {
     public string VerificationCode { get; init; }
 

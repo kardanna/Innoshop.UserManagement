@@ -37,9 +37,9 @@ public class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand>
 
         await _emailService.ClearUserRecordsAsync(request.SubjectId);
 
-        await _unitOfWork.SaveChangesAsync();
-
         await _tokenProvider.RevokeAllTokensAsync(request.SubjectId);
+
+        await _unitOfWork.SaveChangesAsync();
 
         await _innoshopNotifier.SendUserDeletedNotificationAsync(new()
             {

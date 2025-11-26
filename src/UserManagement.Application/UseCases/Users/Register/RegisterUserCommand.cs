@@ -3,13 +3,13 @@ using UserManagement.Application.UseCases.Users.Get;
 
 namespace UserManagement.Application.UseCases.Users.Register;
 
-public class RegisterUserCommand : ICommand<GetUserResponse>
+public record RegisterUserCommand : ICommand<GetUserResponse>
 {
     public string FirstName { get; init; }
     public string LastName { get; init; }
-    public DateOnly DateOfBirth { get; set; }
+    public DateOnly DateOfBirth { get; init; }
     public string Email { get; init; }
-    public string Password { get; set; }
+    public string Password { get; init; }
 
     public RegisterUserCommand(
         string firstName,

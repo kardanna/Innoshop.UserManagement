@@ -2,7 +2,7 @@ using UserManagement.Application.Messaging;
 
 namespace UserManagement.Application.UseCases.Users.LogoutEverywhere;
 
-public class LogoutUserEverywhereCommand : ICommand
+public record LogoutUserEverywhereCommand : ICommand
 {
     public Guid UserId { get; init; }    
     public Guid? RequesterId { get; init; }

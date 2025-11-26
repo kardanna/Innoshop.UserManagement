@@ -2,7 +2,7 @@ using UserManagement.Application.Messaging;
 
 namespace UserManagement.Application.UseCases.Users.Delete;
 
-public class DeleteUserCommand : ICommand
+public record DeleteUserCommand : ICommand
 {
     public Guid SubjectId { get; init; }
     public string? Password { get; init; }

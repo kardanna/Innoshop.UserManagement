@@ -2,7 +2,7 @@ using UserManagement.Application.UseCases.Users.Delete;
 
 namespace UserManagement.Application.Contexts;
 
-public class DeleteUserContext
+public record DeleteUserContext
 {
     public Guid SubjectId { get; init; }
     public string? Password { get; init; }

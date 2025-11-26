@@ -76,9 +76,9 @@ public static class DomainErrors
             "Admin users cannot be deactivated or reactivated."
         );
 
-        public static readonly Error NotAdminRequester = new(
-            "Reactivation.NotAdminRequester",
-            "Only admin users can reactivate users that were deactivated by admin."
+        public static readonly Error NotAuthorized = new(
+            "Reactivation.NotAuthorized",
+            "Only admin or user requested deactivation may reactivate the user. Only admin users can reactivate users that were deactivated by admin."
         );
     }
 

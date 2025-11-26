@@ -2,7 +2,7 @@ using UserManagement.Application.Messaging;
 
 namespace UserManagement.Application.UseCases.Users.Deactivate;
 
-public class DeactivateUserCommand : ICommand
+public record DeactivateUserCommand : ICommand
 {
     public Guid SubjectId { get; init; }
     public Guid RequesterId { get; init; }

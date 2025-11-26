@@ -15,28 +15,23 @@ using UserManagement.Infrastructure.Authentication.Repositories;
 
 namespace UserManagement.Infrastructure.Authentication.Tokens;
 
+//No UnitOfWork calls!!!!
 public class TokenProvider : ITokenProvider
 {
     private readonly ITokenRecordRepository _tokenRepository;
     private readonly ISigningKeyProvider _signingKeyProvider;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly JwtOptions _jwtOptions;
-    private readonly IInnoshopNotifier _innoshopNotifier;
     private readonly ILogger<TokenProvider> _logger;
 
     public TokenProvider(
         ITokenRecordRepository tokenRepository,
         ISigningKeyProvider signingKeyProvider,
-        IUnitOfWork unitOfWork,
         IOptions<JwtOptions> jwtOptions,
-        IInnoshopNotifier innoshopNotifier,
         ILogger<TokenProvider> logger)
     {
         _tokenRepository = tokenRepository;
         _signingKeyProvider = signingKeyProvider;
-        _unitOfWork = unitOfWork;
         _jwtOptions = jwtOptions.Value;
-        _innoshopNotifier = innoshopNotifier;
         _logger = logger;
     }
 
@@ -70,8 +65,6 @@ public class TokenProvider : ITokenProvider
 
         string accessTokenValue = new JwtSecurityTokenHandler().WriteToken(token);
 
-        await _unitOfWork.SaveChangesAsync();
-
         return new LoginUserResponse(
             accessTokenValue,
             tokenRecord.AccessTokenExpiresAt,
@@ -89,8 +82,6 @@ public class TokenProvider : ITokenProvider
         if (isRefreshTokenExpired)
         {
             _tokenRepository.Revome(tokenRecord.AccessTokenId);
-            await _unitOfWork.SaveChangesAsync();
-
             return DomainErrors.RefreshToken.Expired;
         }
 
@@ -102,6 +93,40 @@ public class TokenProvider : ITokenProvider
         //and to own redis
 
         return newToken;
+    }
+
+    public async Task<Result> RevokeTokenAsync(Guid tokenId)
+    {
+        var token = await _tokenRepository.GetAsync(tokenId);
+
+        if (token == null) return Result.Success();
+
+        _tokenRepository.Revome(tokenId);
+
+        if (token.AccessTokenExpiresAt > DateTime.UtcNow)
+        {
+            //Publish revoked token to redis!!!!!
+        }
+
+        return Result.Success();
+    }
+
+    public async Task<Result> RevokeAllTokensAsync(Guid userId)
+    {
+        var tokens = await _tokenRepository.GetAllAsync(userId);
+
+        foreach (var token in tokens.Where(t => t.AccessTokenExpiresAt > DateTime.UtcNow))
+        {
+            if (token.AccessTokenExpiresAt > DateTime.UtcNow)
+            {
+                Console.WriteLine($"Revoked unexpired access token '{token.AccessTokenId}' of user '{token.UserId}'");
+                //Publish revoked token to redis!!!!!!
+            }
+        }
+
+        _tokenRepository.RevomeRange(tokens);
+
+        return Result.Success();
     }
 
     private TokenRecord CreateTokenRecord(User user, string fingerprint)
@@ -119,50 +144,16 @@ public class TokenProvider : ITokenProvider
         return tokenRecord;
     }
 
-    private static string GenerateRefreshToken()
+    private static string GenerateRefreshToken(int size = 256)
     {
-        var randomNumber = new byte[256];
+        var randomNumber = new byte[size];
         using var generator = RandomNumberGenerator.Create();
         generator.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
-    }
+        var base64 = Convert.ToBase64String(randomNumber)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
 
-    public async Task<Result> RevokeTokenAsync(Guid tokenId)
-    {
-        var token = await _tokenRepository.GetAsync(tokenId);
-
-        if (token == null) return Result.Success();
-
-        _tokenRepository.Revome(tokenId);
-
-        if (token.AccessTokenExpiresAt > DateTime.UtcNow)
-        {
-            //Publish revoked token to redis!!!!!
-        }
-
-        await _unitOfWork.SaveChangesAsync();
-
-        return Result.Success();
-    }
-
-    public async Task<Result> RevokeAllTokensAsync(Guid userId)
-    {
-        var tokens = await _tokenRepository.GetAllAsync(userId);
-
-        foreach (var token in tokens.Where(t => t.AccessTokenExpiresAt > DateTime.UtcNow))
-        {
-            if (token.AccessTokenExpiresAt > DateTime.UtcNow)
-            {
-                Console.WriteLine($"Revoked unexpired access token '{token.AccessTokenId}' of user '{token.UserId}'");
-                //Publish revoked token to redis!!!!!!
-
-            }
-        }
-
-        _tokenRepository.RevomeRange(tokens);
-
-        await _unitOfWork.SaveChangesAsync();
-
-        return Result.Success();
+        return base64;
     }
 }

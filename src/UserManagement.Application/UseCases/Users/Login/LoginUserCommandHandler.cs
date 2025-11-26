@@ -9,11 +9,16 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, LoginUs
 {
     private readonly IUserService _userService;
     private readonly ITokenProvider _tokenService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public LoginUserCommandHandler(IUserService userService, ITokenProvider tokenService)
+    public LoginUserCommandHandler(
+        IUserService userService,
+        ITokenProvider tokenService,
+        IUnitOfWork unitOfWork)
     {
         _userService = userService;
         _tokenService = tokenService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LoginUserResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
@@ -22,9 +27,15 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, LoginUs
 
         var user = await _userService.LoginAsync(loginContext);
 
-        if (user.IsFailure) return user.Error;
+        if (user.IsFailure)
+        {
+            await _unitOfWork.SaveChangesAsync();
+            return user.Error;
+        }
 
         var response = await _tokenService.GenerateFromLoginAsync(user.Value, request.DeviceFingerprint);
+
+        await _unitOfWork.SaveChangesAsync();
 
         return response;
     }

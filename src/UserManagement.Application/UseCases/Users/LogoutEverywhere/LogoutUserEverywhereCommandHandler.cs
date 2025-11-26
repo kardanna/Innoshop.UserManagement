@@ -7,16 +7,22 @@ namespace UserManagement.Application.UseCases.Users.LogoutEverywhere;
 public class LogoutUserEverywhereCommandHandler : ICommandHandler<LogoutUserEverywhereCommand>
 {
     private readonly ITokenProvider _provider;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public LogoutUserEverywhereCommandHandler(ITokenProvider provider)
+    public LogoutUserEverywhereCommandHandler(
+        ITokenProvider provider,
+        IUnitOfWork unitOfWokr)
     {
         _provider = provider;
+        _unitOfWork = unitOfWokr;
     }
 
     public async Task<Result> Handle(LogoutUserEverywhereCommand request, CancellationToken cancellationToken)
     {
         //log requester???
         var response = await _provider.RevokeAllTokensAsync(request.UserId);
+
+        await _unitOfWork.SaveChangesAsync();
 
         return response;
     }

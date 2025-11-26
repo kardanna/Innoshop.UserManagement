@@ -14,6 +14,7 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IUserDeactivationRepository _userDeactivationRepository;
     private readonly IPasswordRestoreAttemptRepository _passwordRestoreAttemptRepository;
+    private readonly ILoginAttemptRepository _loginRepository;
     private readonly IPasswordHasher<User> _hasher;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserPolicy _userPolicy;
@@ -24,6 +25,7 @@ public class UserService : IUserService
         IUserRepository userRepository,
         IUserDeactivationRepository userDeactivationRepository,
         IPasswordRestoreAttemptRepository passwordRestoreAttemptRepository,
+        ILoginAttemptRepository loginRepository,
         IPasswordHasher<User> hasher,
         IUnitOfWork unitOfWork,
         IUserPolicy userPolicy,
@@ -32,6 +34,7 @@ public class UserService : IUserService
     {
         _userRepository = userRepository;
         _userDeactivationRepository = userDeactivationRepository;
+        _loginRepository = loginRepository;
         _passwordRestoreAttemptRepository = passwordRestoreAttemptRepository;
         _hasher = hasher;
         _unitOfWork = unitOfWork;
@@ -46,6 +49,8 @@ public class UserService : IUserService
 
     public async Task<Result<User>> LoginAsync(LoginUserContext context)
     {
+        _loginRepository.AddAttempt(context.Email, context.DeviceFingerprint);
+
         var user = await _userRepository.GetAsync(context.Email);
 
         if (user is null) return DomainErrors.Login.WrongEmailOrPassword;
@@ -53,13 +58,6 @@ public class UserService : IUserService
         var attempt = await _userPolicy.IsLoginAllowedAsync(user, context);
 
         if (attempt.IsDenied) return attempt.Error;
-        
-        var passwordMatch = _hasher.VerifyHashedPassword(null!, user.PasswordHash, context.Password);
-
-        if (passwordMatch == PasswordVerificationResult.Failed)
-        {
-            return DomainErrors.Login.WrongEmailOrPassword;
-        }
 
         return user;
     }

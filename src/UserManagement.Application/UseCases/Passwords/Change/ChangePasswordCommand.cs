@@ -2,7 +2,7 @@ using UserManagement.Application.Messaging;
 
 namespace UserManagement.Application.UseCases.Passwords.Change;
 
-public class ChangePasswordCommand : ICommand
+public record ChangePasswordCommand : ICommand
 {
     public Guid UserId { get; init; }
     public string OldPassword { get; init; }

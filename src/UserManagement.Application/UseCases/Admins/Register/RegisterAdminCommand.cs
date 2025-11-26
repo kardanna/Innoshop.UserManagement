@@ -2,7 +2,7 @@ using UserManagement.Application.UseCases.Users.Register;
 
 namespace UserManagement.Application.UseCases.Admins.Register;
 
-public class RegisterAdminCommand : RegisterUserCommand
+public record RegisterAdminCommand : RegisterUserCommand
 {
     public Guid RequesterId { get; init; }
 

@@ -2,7 +2,7 @@ using UserManagement.Application.Messaging;
 
 namespace UserManagement.Application.UseCases.Users.Login;
 
-public class LoginUserCommand : ICommand<LoginUserResponse>
+public record LoginUserCommand : ICommand<LoginUserResponse>
 {
     public string Email { get; init; }
     public string Password { get; init; }
