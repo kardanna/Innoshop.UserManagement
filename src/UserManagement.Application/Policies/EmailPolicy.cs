@@ -34,7 +34,8 @@ public class EmailPolicy : IEmailPolicy
         
         if (IsVerificationCodeExpired(attempt)) return DomainErrors.EmailVerification.CodeExpiredOrNotFound;
 
-        if (!await IsEmailAvailable(attempt.Email)) return DomainErrors.Email.EmailAlreadyInUse;
+        var isEmailChangeAttempt = attempt.User.Email != attempt.Email;
+        if (isEmailChangeAttempt && !await IsEmailAvailable(attempt.Email)) return DomainErrors.Email.EmailAlreadyInUse;
 
         return PolicyResult.Success;
     }

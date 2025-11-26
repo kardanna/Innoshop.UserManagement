@@ -21,6 +21,7 @@ using UserManagement.Persistence;
 using UserManagement.Persistence.Repositories;
 using UserManagement.Infrastructure.Messaging.Abstractions;
 using UserManagement.Infrastructure.EmailSender;
+using UserManagement.Presentation;
 
 namespace UserManagement.API;
 
@@ -61,6 +62,10 @@ public class Program
         builder.Services.AddScoped<IUserPolicy, UserPolicy>();
         builder.Services.AddScoped<IEmailPolicy, EmailPolicy>();
         builder.Services.AddScoped<IPasswordPolicy, PasswordPolicy>();
+        
+        //UrlProvider
+        builder.Services.AddScoped<IUrlProvider, UrlProvider>();
+        builder.Services.AddHttpContextAccessor();
 
         //Singletons
         builder.Services.AddSingleton<ISigningKeyCache, SigningKeysCache>();

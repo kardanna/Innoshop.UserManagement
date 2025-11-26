@@ -85,11 +85,35 @@ public class ConfirmEmailPolicyTests
     }
 
     [Fact]
-    public async Task EmailPolicy_ShouldAllowConfirmation_WhenAllRulesApply()
+    public async Task EmailPolicy_ShouldDenyConfirmation_WhenAttemptIsEmailChangeAttemptAndEmailIsTaken()
     {
         //Arrange
         attempt.IsSucceeded = false;
         attempt.AttemptedAt = DateTime.UtcNow;
+        attempt.PreviousEmail = "old@email.com";
+        attempt.Email = "new@email.com";
+        user.Email = "old@email.com";
+        attempt.User = user;
+        _userRepositoryMock.CountUsersWithEmailAsync(attempt.Email).Returns(1);
+
+        //Act
+        var result = await _policy.IsConfirmationAllowedAsync(attempt);
+
+        //Assert
+        result.Error.Should().Be(DomainErrors.Email.EmailAlreadyInUse);
+    }
+
+    [Fact]
+    public async Task EmailPolicy_ShouldAllowConfirmation_WhenAttemptIsAccountVerificationAttemptAndEmailIsTaken()
+    {
+        //Arrange
+        attempt.IsSucceeded = false;
+        attempt.AttemptedAt = DateTime.UtcNow;
+        attempt.PreviousEmail = null;
+        attempt.Email = "old@email.com";
+        user.Email = "old@email.com";
+        attempt.User = user;
+        _userRepositoryMock.CountUsersWithEmailAsync(attempt.Email).Returns(1);
 
         //Act
         var result = await _policy.IsConfirmationAllowedAsync(attempt);

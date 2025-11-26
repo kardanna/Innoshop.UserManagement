@@ -17,19 +17,22 @@ public class EmailService : IEmailService
     private readonly IEmailPolicy _emailPolicy;
     private readonly IEmailSender _emailSender;
     private readonly EmailOptions _emailOptions;
+    private readonly IUrlProvider _urlProvider;
 
     public EmailService(
         IEmailVerificationAttemptRepository repository,
         IUnitOfWork unitOfWork,
         IEmailPolicy emailPolicy,
         IEmailSender emailSender,
-        IOptions<EmailOptions> emailOptions)
+        IOptions<EmailOptions> emailOptions,
+        IUrlProvider urlProvider)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _emailPolicy = emailPolicy;
         _emailSender = emailSender;
         _emailOptions = emailOptions.Value;
+        _urlProvider = urlProvider;
     }
 
     public async Task<Result> SendRequestToVerifyUserAccountAsync(User user)
@@ -44,9 +47,9 @@ public class EmailService : IEmailService
 
         _repository.Add(request);
 
-        var verificationUrl = $"{_emailOptions.AccountVerificationCallbackUrl}/{request.VerificationCode}";
+        string? verificationUrl = _urlProvider.GetUrlForEmailVerificationEndpoint(request.VerificationCode);
 
-        return await _emailSender.SendAccountVerificationMessageAsync(request.Email, verificationUrl);
+        return await _emailSender.SendAccountVerificationMessageAsync(request.Email, request.VerificationCode, verificationUrl);
     }
 
     public async Task<Result> SendRequestToChangeUserEmailAsync(EmailChangeContext context)
@@ -68,9 +71,9 @@ public class EmailService : IEmailService
 
         _repository.Add(request);
 
-        var verificationUrl = $"{_emailOptions.EmailVerificationCallbackUrl}/{request.VerificationCode}";
+        string? verificationUrl = _urlProvider.GetUrlForEmailVerificationEndpoint(request.VerificationCode);
 
-        return await _emailSender.SendEmailAddressVerificationMessageAsync(request.Email, verificationUrl);
+        return await _emailSender.SendEmailAddressVerificationMessageAsync(request.Email, request.VerificationCode, verificationUrl);
     }
 
     public async Task<Result> ConfirmSednedRequestAsync(string verificationCode)
