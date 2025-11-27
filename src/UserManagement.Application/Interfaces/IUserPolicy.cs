@@ -10,6 +10,6 @@ public interface IUserPolicy
     Task<PolicyResult> IsUpdateAllowedAsync(User user, UpdateUserContext context);
     Task<PolicyResult> IsLoginAllowedAsync(User user, LoginUserContext context);
     Task<PolicyResult> IsDeactivationAllowedAsync(User subject, User requester);
-    Task<PolicyResult> IsReactivationAllowedAsync(User subject, User requester);
+    Task<PolicyResult> IsReactivationAllowedAsync(User subject, User requester, UserDeactivation record);
     Task<PolicyResult> IsDeletionAllowedAsync(User subject, User requester, DeleteUserContext context);
 }

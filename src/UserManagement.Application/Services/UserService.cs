@@ -169,13 +169,13 @@ public class UserService : IUserService
             requester = await _userRepository.GetAsync(requesterId);
             if (requester is null) return Result.Failure(DomainErrors.User.NotFound);
         }
-        
-        var attempt = await _userPolicy.IsReactivationAllowedAsync(subject, requester);
-
-        if (attempt.IsDenied) return Result.Failure(attempt.Error);
 
         var record = await _userDeactivationRepository.GetLatestAsync(subject.Id);
         if (record is null) return Result.Failure(DomainErrors.Reactivation.AlreadyReactivated);
+        
+        var attempt = await _userPolicy.IsReactivationAllowedAsync(subject, requester, record);
+
+        if (attempt.IsDenied) return Result.Failure(attempt.Error);
 
         record.ReactivatedAt = DateTime.UtcNow;
         record.ReactivationRequester = requester;

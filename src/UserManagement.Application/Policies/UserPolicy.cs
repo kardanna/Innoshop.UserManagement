@@ -83,13 +83,11 @@ public class UserPolicy : IUserPolicy
         return PolicyResult.Success;
     }
 
-    public async Task<PolicyResult> IsReactivationAllowedAsync(User subject, User requester)
+    public async Task<PolicyResult> IsReactivationAllowedAsync(User subject, User requester, UserDeactivation record)
     {
         if (subject.IsDeleted || requester.IsDeleted) return DomainErrors.User.NotFound;
 
         if (HasAdminRole(subject)) return DomainErrors.Reactivation.CannotReactivateAdmin;
-        
-        var record = await _userDeactivationRepository.GetLatestAsync(subject.Id);
         
         if (!IsUserDeacivated(record)) return DomainErrors.Reactivation.AlreadyReactivated;
 
@@ -163,6 +161,6 @@ public class UserPolicy : IUserPolicy
 
     private bool IsReactivationRequesterAuthorized(UserDeactivation record, User requester)
     {
-        return record.DeactivationRequester.Id == requester.Id || HasAdminRole(requester);
+        return (record.UserId == requester.Id && !HasAdminRole(record.DeactivationRequester)) || HasAdminRole(requester);
     }
 }
