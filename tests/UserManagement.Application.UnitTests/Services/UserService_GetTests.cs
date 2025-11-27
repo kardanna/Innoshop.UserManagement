@@ -2,18 +2,15 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using NSubstitute;
 using NSubstitute.ClearExtensions;
-using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
-using UserManagement.Application.Models;
 using UserManagement.Application.Repositories;
 using UserManagement.Application.Services;
-using UserManagement.Application.UseCases.Users.Login;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Services;
 
-public class GetUserServiceTests
+public class UserService_GetTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly IUserDeactivationRepository _userDeactivationRepositoryMock;
@@ -25,7 +22,7 @@ public class GetUserServiceTests
 
     private readonly IUserService _service;
 
-    public GetUserServiceTests()
+    public UserService_GetTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _userDeactivationRepositoryMock = Substitute.For<IUserDeactivationRepository>();

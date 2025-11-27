@@ -14,7 +14,7 @@ using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Policies;
 
-public class UpdateUserPolicyTests
+public class UserPolicy_UpdateTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly ILoginAttemptRepository _loginRepositoryMock;
@@ -25,7 +25,7 @@ public class UpdateUserPolicyTests
 
     private readonly IUserPolicy _policy;
 
-    public UpdateUserPolicyTests()
+    public UserPolicy_UpdateTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _loginRepositoryMock = Substitute.For<ILoginAttemptRepository>();

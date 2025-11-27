@@ -269,7 +269,7 @@ public class UserService : IUserService
         return restoreAttempt.User.Id;
     }
 
-    public async Task<bool> IsUserDeacivated(Guid userId)
+    public async Task<bool> IsDeacivated(Guid userId)
     {
         var lastDeactivationRecord = await _userDeactivationRepository.GetLatestAsync(userId);
         return lastDeactivationRecord is not null && lastDeactivationRecord.ReactivatedAt is null;

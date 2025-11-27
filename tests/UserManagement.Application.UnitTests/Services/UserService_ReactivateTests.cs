@@ -1,18 +1,16 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using NSubstitute;
-using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
 using UserManagement.Application.Models;
 using UserManagement.Application.Repositories;
 using UserManagement.Application.Services;
-using UserManagement.Application.UseCases.Users.Delete;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Services;
 
-public class DeleteUserServiceTests
+public class UserService_ReactivateTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly IUserDeactivationRepository _userDeactivationRepositoryMock;
@@ -24,7 +22,7 @@ public class DeleteUserServiceTests
 
     private readonly IUserService _service;
 
-    public DeleteUserServiceTests()
+    public UserService_ReactivateTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _userDeactivationRepositoryMock = Substitute.For<IUserDeactivationRepository>();
@@ -57,75 +55,81 @@ public class DeleteUserServiceTests
         Roles = [ Role.Administrator ]
     };
 
-    private static readonly DeleteUserCommand command = new(
-        Guid.CreateVersion7(),
-        "password",
-        Guid.CreateVersion7()
-    );
+    private static readonly UserDeactivation record = new();
 
     [Fact]
-    public async Task UserService_ShouldReturnErrorOnDelete_WhenSubjectIsNotFound()
+    public async Task UserService_ShouldReturnErrorOnReactivate_WhenSubjectIsNotFound()
     {
         //Arrange
-        var context = new DeleteUserContext(
-            command with { SubjectId = subject.Id, RequesterId = requester.Id });
-        _userRepositoryMock.GetAsync(context.SubjectId).Returns((User)null!);
+        _userRepositoryMock.GetAsync(subject.Id).Returns((User)null!);
 
         //Act
-        var result = await _service.DeleteAsync(context);
+        var result = await _service.ReactivateAsync(subject.Id, requester.Id);
 
         //Assert
         result.Error.Should().Be(DomainErrors.User.NotFound);
     }
 
     [Fact]
-    public async Task UserService_ShouldReturnErrorOnDelete_WhenRequesterIsNotSubjectAndRequesterIsNotFound()
+    public async Task UserService_ShouldReturnErrorOnReactivate_WhenRequesterIsNotSubjectAndRequesterIsNotFound()
     {
         //Arrange
-        var context = new DeleteUserContext(
-            command with { SubjectId = subject.Id, RequesterId = requester.Id });
-        _userRepositoryMock.GetAsync(context.SubjectId).Returns(subject);
-        _userRepositoryMock.GetAsync(context.RequesterId).Returns((User)null!);
+        _userRepositoryMock.GetAsync(subject.Id).Returns(subject);
+        _userRepositoryMock.GetAsync(requester.Id).Returns((User)null!);
 
         //Act
-        var result = await _service.DeleteAsync(context);
+        var result = await _service.ReactivateAsync(subject.Id, requester.Id);
 
         //Assert
         result.Error.Should().Be(DomainErrors.User.NotFound);
     }
 
     [Fact]
-    public async Task UserService_ShouldReturnErrorOnDelete_WhenPolicyDenies()
+    public async Task UserService_ShouldReturnErrorOnReactivate_WhenDeactivationRecordIsNotFound()
     {
         //Arrange
-        var context = new DeleteUserContext(
-            command with { SubjectId = subject.Id, RequesterId = requester.Id });
-        _userRepositoryMock.GetAsync(context.SubjectId).Returns(subject);
-        _userRepositoryMock.GetAsync(context.RequesterId).Returns(requester);
-        var error = DomainErrors.Deletion.EmptyOrWrongPassword;
-        _userPolicyMock.IsDeletionAllowedAsync(subject, requester, context).Returns(error);
+        _userRepositoryMock.GetAsync(subject.Id).Returns(subject);
+        _userRepositoryMock.GetAsync(requester.Id).Returns(requester);
+        _userDeactivationRepositoryMock.GetLatestAsync(subject.Id).Returns((UserDeactivation)null!);
+        
+        //Act
+        var result = await _service.ReactivateAsync(subject.Id, requester.Id);
+
+        //Assert
+        result.Error.Should().Be(DomainErrors.Reactivation.AlreadyReactivated);
+    }
+
+    [Fact]
+    public async Task UserService_ShouldReturnErrorOnReactivate_WhenPolicyDenies()
+    {
+        //Arrange
+        _userRepositoryMock.GetAsync(subject.Id).Returns(subject);
+        _userRepositoryMock.GetAsync(requester.Id).Returns(requester);
+        _userDeactivationRepositoryMock.GetLatestAsync(subject.Id).Returns(record);
+        var error = DomainErrors.Reactivation.AlreadyReactivated;
+        _userPolicyMock.IsReactivationAllowedAsync(subject, requester, record).Returns(error);
 
         //Act
-        var result = await _service.DeleteAsync(context);
+        var result = await _service.ReactivateAsync(subject.Id, requester.Id);
 
         //Assert
         result.Error.Should().Be(error);
     }
 
     [Fact]
-    public async Task UserService_ShouldReturnSuccessOnDelete_WhenPolicyAllows()
+    public async Task UserService_ShouldReturnSuccessOnReactivate_WhenPolicyAllows()
     {
         //Arrange
-        var context = new DeleteUserContext(
-            command with { SubjectId = subject.Id, RequesterId = requester.Id });
-        _userRepositoryMock.GetAsync(context.SubjectId).Returns(subject);
-        _userRepositoryMock.GetAsync(context.RequesterId).Returns(requester);
-        _userPolicyMock.IsDeletionAllowedAsync(subject, requester, context).Returns(PolicyResult.Success);
+        _userRepositoryMock.GetAsync(subject.Id).Returns(subject);
+        _userRepositoryMock.GetAsync(requester.Id).Returns(requester);
+        _userDeactivationRepositoryMock.GetLatestAsync(subject.Id).Returns(record);
+        _userPolicyMock.IsReactivationAllowedAsync(subject, requester, record).Returns(PolicyResult.Success);
 
         //Act
-        var result = await _service.DeleteAsync(context);
+        var result = await _service.ReactivateAsync(subject.Id, requester.Id);
 
         //Assert
         result.IsSuccess.Should().BeTrue();
+        record.ReactivationRequester.Should().Be(requester);
     }
 }

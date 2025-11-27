@@ -17,5 +17,5 @@ public interface IUserService
     Task<Result> ChangePasswordAsync(ChangePasswordContext context);
     Task<Result<string>> InitiatePasswordRestorationAsync(string userEmail);
     Task<Result<Guid>> RestorePasswordAsync(string restoreCode, string newPassword);
-    Task<bool> IsUserDeacivated(Guid userId);
+    Task<bool> IsDeacivated(Guid userId);
 }

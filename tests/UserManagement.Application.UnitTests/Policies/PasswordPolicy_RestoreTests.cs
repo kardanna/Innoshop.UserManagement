@@ -2,24 +2,22 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
 using UserManagement.Application.Models;
 using UserManagement.Application.Policies;
-using UserManagement.Application.UseCases.Passwords.Change;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Policies;
 
-public class PasswordRestorePolicyTests
+public class PasswordPolicy_RestoreTests
 {
     private readonly IOptions<Options.PasswordOptions> _passwordOptionsMock;
     private readonly IPasswordHasher<User> _hasherMock;
 
     private readonly IPasswordPolicy _policy;
 
-    public PasswordRestorePolicyTests()
+    public PasswordPolicy_RestoreTests()
     {
         _passwordOptionsMock = Substitute.For<IOptions<Options.PasswordOptions>>();
         _hasherMock = Substitute.For<IPasswordHasher<User>>();

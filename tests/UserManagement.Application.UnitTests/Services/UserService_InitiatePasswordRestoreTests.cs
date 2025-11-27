@@ -1,18 +1,15 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using NSubstitute;
-using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
-using UserManagement.Application.Models;
 using UserManagement.Application.Repositories;
 using UserManagement.Application.Services;
-using UserManagement.Application.UseCases.Passwords.Change;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Services;
 
-public class ChangePasswordUserServiceTests
+public class UserService_InitiatePasswordRestoreTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly IUserDeactivationRepository _userDeactivationRepositoryMock;
@@ -24,7 +21,7 @@ public class ChangePasswordUserServiceTests
 
     private readonly IUserService _service;
 
-    public ChangePasswordUserServiceTests()
+    public UserService_InitiatePasswordRestoreTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _userDeactivationRepositoryMock = Substitute.For<IUserDeactivationRepository>();
@@ -45,60 +42,35 @@ public class ChangePasswordUserServiceTests
         );
     }
 
-    private static readonly User user = new()
-    {
-        Id = Guid.CreateVersion7(),
-        Roles = [ Role.Customer ]
-    };
-
-    private static readonly ChangePasswordCommand command = new(
-        Guid.CreateVersion7(),
-        "oldPassword",
-        "newPassword"
-    );
+    private static readonly User user = new(); 
 
     [Fact]
-    public async Task UserService_ShouldReturnErrorOnChangePassword_WhenUserIsNotFound()
+    public async Task UserService_ShouldReturnErrorOnInitiatePasswordRestrore_WhenUserIsNotFound()
     {
         //Arrange
-        var context = new ChangePasswordContext(command with { UserId = user.Id });
-        _userRepositoryMock.GetAsync(context.UserId).Returns((User)null!);
+        var userEmail = "user@email.com";
+        _userRepositoryMock.GetAsync(userEmail).Returns((User)null!);
 
         //Act
-        var result = await _service.ChangePasswordAsync(context);
+        var result = await _service.InitiatePasswordRestorationAsync(userEmail);
 
         //Assert
         result.Error.Should().Be(DomainErrors.User.NotFound);
     }
 
     [Fact]
-    public async Task UserService_ShouldReturnErrorOnChangePassword_WhenPolicyDenies()
+    public async Task UserService_ShouldReturnSuccessOnInitiatePasswordRestrore_WhenUserIsFound()
     {
         //Arrange
-        var context = new ChangePasswordContext(command with { UserId = user.Id });
-        _userRepositoryMock.GetAsync(context.UserId).Returns(user);
-        var error = DomainErrors.PasswordChange.EmptyOrWrongPassword;
-        _passwordPolicyMock.IsPasswordChangeAllowedAsync(user, context).Returns(error);
+        var userEmail = "user@email.com";
+        _userRepositoryMock.GetAsync(userEmail).Returns(user);
 
         //Act
-        var result = await _service.ChangePasswordAsync(context);
-
-        //Assert
-        result.Error.Should().Be(error);
-    }
-
-    [Fact]
-    public async Task UserService_ShouldReturnSuccessOnChangePassword_WhenPolicyAllows()
-    {
-        //Arrange
-        var context = new ChangePasswordContext(command with { UserId = user.Id });
-        _userRepositoryMock.GetAsync(context.UserId).Returns(user);
-        _passwordPolicyMock.IsPasswordChangeAllowedAsync(user, context).Returns(PolicyResult.Success);
-
-        //Act
-        var result = await _service.ChangePasswordAsync(context);
+        var result = await _service.InitiatePasswordRestorationAsync(userEmail);
 
         //Assert
         result.IsSuccess.Should().BeTrue();
+        _passwordRestoreAttemptRepositoryMock.Received(1).RemovePreviousUnseccessfulAttempts(user.Id);
+        _passwordRestoreAttemptRepositoryMock.Received(1).Add(Arg.Is<PasswordRestoreAttempt>(a => a.User == user));
     }
 }

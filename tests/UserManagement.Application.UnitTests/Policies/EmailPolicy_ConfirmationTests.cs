@@ -11,7 +11,7 @@ using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Policies;
 
-public class ConfirmEmailPolicyTests
+public class EmailPolicy_ConfirmationTests
 {
     private readonly IOptions<EmailOptions> _optionsMock;
     private readonly IUserRepository _userRepositoryMock;
@@ -20,7 +20,7 @@ public class ConfirmEmailPolicyTests
 
     private readonly IEmailPolicy _policy;
 
-    public ConfirmEmailPolicyTests()
+    public EmailPolicy_ConfirmationTests()
     {
         _optionsMock = Substitute.For<IOptions<EmailOptions>>();
         _userRepositoryMock = Substitute.For<IUserRepository>();

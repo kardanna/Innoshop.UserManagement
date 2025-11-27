@@ -1,15 +1,18 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using NSubstitute;
+using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
+using UserManagement.Application.Models;
 using UserManagement.Application.Repositories;
 using UserManagement.Application.Services;
+using UserManagement.Application.UseCases.Users.Login;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Services;
 
-public class InitiatePasswordRestoreUserServiceTests
+public class UserService_LoginTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly IUserDeactivationRepository _userDeactivationRepositoryMock;
@@ -21,7 +24,7 @@ public class InitiatePasswordRestoreUserServiceTests
 
     private readonly IUserService _service;
 
-    public InitiatePasswordRestoreUserServiceTests()
+    public UserService_LoginTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _userDeactivationRepositoryMock = Substitute.For<IUserDeactivationRepository>();
@@ -42,35 +45,62 @@ public class InitiatePasswordRestoreUserServiceTests
         );
     }
 
-    private static readonly User user = new(); 
+    private static readonly User user = new()
+    {
+        Id = Guid.CreateVersion7(),
+        Email = "user@email.com",
+        PasswordHash = "hash"
+    };
+
+    private static readonly LoginUserCommand command = new(
+        "user@email.com",
+        "password",
+        "deviceFingerprint"
+    );
 
     [Fact]
-    public async Task UserService_ShouldReturnErrorOnInitiatePasswordRestrore_WhenUserIsNotFound()
+    public async Task UserService_ShouldReturnErrorOnLogin_WhenUserEmailIsNotFound()
     {
         //Arrange
-        var userEmail = "user@email.com";
-        _userRepositoryMock.GetAsync(userEmail).Returns((User)null!);
+        var context = new LoginUserContext(command);
+        _userRepositoryMock.GetAsync(context.Email).Returns((User)null!);
 
         //Act
-        var result = await _service.InitiatePasswordRestorationAsync(userEmail);
+        var result = await _service.LoginAsync(context);
 
         //Assert
-        result.Error.Should().Be(DomainErrors.User.NotFound);
+        result.Error.Should().Be(DomainErrors.Login.WrongEmailOrPassword);
     }
 
     [Fact]
-    public async Task UserService_ShouldReturnSuccessOnInitiatePasswordRestrore_WhenUserIsFound()
+    public async Task UserService_ShouldReturnErrorOnLogin_WhenPolicyDeniesLogin()
     {
         //Arrange
-        var userEmail = "user@email.com";
-        _userRepositoryMock.GetAsync(userEmail).Returns(user);
+        var context = new LoginUserContext(command);
+        _userRepositoryMock.GetAsync(context.Email).Returns(user);
+        var error = DomainErrors.Login.WrongEmailOrPassword;
+        _userPolicyMock.IsLoginAllowedAsync(user, context).Returns(error);
 
         //Act
-        var result = await _service.InitiatePasswordRestorationAsync(userEmail);
+        var result = await _service.LoginAsync(context);
+
+        //Assert
+        result.Error.Should().Be(error);
+    }
+
+    [Fact]
+    public async Task UserService_ShouldReturnUserOnLogin_WhenUserIsRegisteredAndPolicyAllows()
+    {
+        //Arrange
+        var context = new LoginUserContext(command);
+        _userRepositoryMock.GetAsync(context.Email).Returns(user);
+        _userPolicyMock.IsLoginAllowedAsync(user, context).Returns(PolicyResult.Success);
+
+        //Act
+        var result = await _service.LoginAsync(context);
 
         //Assert
         result.IsSuccess.Should().BeTrue();
-        _passwordRestoreAttemptRepositoryMock.Received(1).RemovePreviousUnseccessfulAttempts(user.Id);
-        _passwordRestoreAttemptRepositoryMock.Received(1).Add(Arg.Is<PasswordRestoreAttempt>(a => a.User == user));
+        result.Value.Should().Be(user);
     }
 }

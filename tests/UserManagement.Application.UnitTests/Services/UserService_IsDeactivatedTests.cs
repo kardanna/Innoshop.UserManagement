@@ -2,15 +2,13 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using NSubstitute;
 using UserManagement.Application.Interfaces;
-using UserManagement.Application.Models;
 using UserManagement.Application.Repositories;
 using UserManagement.Application.Services;
 using UserManagement.Domain.Entities;
-using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Services;
 
-public class IsDeactivatedUserServiceTests
+public class UserService_IsDeactivatedTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly IUserDeactivationRepository _userDeactivationRepositoryMock;
@@ -22,7 +20,7 @@ public class IsDeactivatedUserServiceTests
 
     private readonly IUserService _service;
 
-    public IsDeactivatedUserServiceTests()
+    public UserService_IsDeactivatedTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _userDeactivationRepositoryMock = Substitute.For<IUserDeactivationRepository>();
@@ -55,7 +53,7 @@ public class IsDeactivatedUserServiceTests
         _userDeactivationRepositoryMock.GetLatestAsync(user.Id).Returns((UserDeactivation)null!);
        
         //Act
-        var result = await _service.IsUserDeacivated(user.Id);
+        var result = await _service.IsDeacivated(user.Id);
 
         //Assert
         result.Should().BeFalse();
@@ -79,7 +77,7 @@ public class IsDeactivatedUserServiceTests
         _userDeactivationRepositoryMock.GetLatestAsync(user.Id).Returns(record);
 
         //Act
-        var result = await _service.IsUserDeacivated(user.Id);
+        var result = await _service.IsDeacivated(user.Id);
 
         //Assert
         result.Should().BeTrue();
@@ -103,7 +101,7 @@ public class IsDeactivatedUserServiceTests
         _userDeactivationRepositoryMock.GetLatestAsync(user.Id).Returns(record);
 
         //Act
-        var result = await _service.IsUserDeacivated(user.Id);
+        var result = await _service.IsDeacivated(user.Id);
 
         //Assert
         result.Should().BeFalse();

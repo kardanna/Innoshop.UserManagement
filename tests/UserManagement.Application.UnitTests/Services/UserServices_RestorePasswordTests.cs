@@ -10,7 +10,7 @@ using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Services;
 
-public class RestorePasswordUserServiceTests
+public class UserServices_RestorePasswordTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly IUserDeactivationRepository _userDeactivationRepositoryMock;
@@ -22,7 +22,7 @@ public class RestorePasswordUserServiceTests
 
     private readonly IUserService _service;
 
-    public RestorePasswordUserServiceTests()
+    public UserServices_RestorePasswordTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _userDeactivationRepositoryMock = Substitute.For<IUserDeactivationRepository>();

@@ -6,13 +6,13 @@ using UserManagement.Application.Interfaces;
 using UserManagement.Application.Models;
 using UserManagement.Application.Repositories;
 using UserManagement.Application.Services;
-using UserManagement.Application.UseCases.Users.Login;
+using UserManagement.Application.UseCases.Passwords.Change;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Services;
 
-public class LoginUserServiceTests
+public class UserService_ChangePasswordTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly IUserDeactivationRepository _userDeactivationRepositoryMock;
@@ -24,7 +24,7 @@ public class LoginUserServiceTests
 
     private readonly IUserService _service;
 
-    public LoginUserServiceTests()
+    public UserService_ChangePasswordTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _userDeactivationRepositoryMock = Substitute.For<IUserDeactivationRepository>();
@@ -48,59 +48,57 @@ public class LoginUserServiceTests
     private static readonly User user = new()
     {
         Id = Guid.CreateVersion7(),
-        Email = "user@email.com",
-        PasswordHash = "hash"
+        Roles = [ Role.Customer ]
     };
 
-    private static readonly LoginUserCommand command = new(
-        "user@email.com",
-        "password",
-        "deviceFingerprint"
+    private static readonly ChangePasswordCommand command = new(
+        Guid.CreateVersion7(),
+        "oldPassword",
+        "newPassword"
     );
 
     [Fact]
-    public async Task UserService_ShouldReturnErrorOnLogin_WhenUserEmailIsNotFound()
+    public async Task UserService_ShouldReturnErrorOnChangePassword_WhenUserIsNotFound()
     {
         //Arrange
-        var context = new LoginUserContext(command);
-        _userRepositoryMock.GetAsync(context.Email).Returns((User)null!);
+        var context = new ChangePasswordContext(command with { UserId = user.Id });
+        _userRepositoryMock.GetAsync(context.UserId).Returns((User)null!);
 
         //Act
-        var result = await _service.LoginAsync(context);
+        var result = await _service.ChangePasswordAsync(context);
 
         //Assert
-        result.Error.Should().Be(DomainErrors.Login.WrongEmailOrPassword);
+        result.Error.Should().Be(DomainErrors.User.NotFound);
     }
 
     [Fact]
-    public async Task UserService_ShouldReturnErrorOnLogin_WhenPolicyDeniesLogin()
+    public async Task UserService_ShouldReturnErrorOnChangePassword_WhenPolicyDenies()
     {
         //Arrange
-        var context = new LoginUserContext(command);
-        _userRepositoryMock.GetAsync(context.Email).Returns(user);
-        var error = DomainErrors.Login.WrongEmailOrPassword;
-        _userPolicyMock.IsLoginAllowedAsync(user, context).Returns(error);
+        var context = new ChangePasswordContext(command with { UserId = user.Id });
+        _userRepositoryMock.GetAsync(context.UserId).Returns(user);
+        var error = DomainErrors.PasswordChange.EmptyOrWrongPassword;
+        _passwordPolicyMock.IsPasswordChangeAllowedAsync(user, context).Returns(error);
 
         //Act
-        var result = await _service.LoginAsync(context);
+        var result = await _service.ChangePasswordAsync(context);
 
         //Assert
         result.Error.Should().Be(error);
     }
 
     [Fact]
-    public async Task UserService_ShouldReturnUserOnLogin_WhenUserIsRegisteredAndPolicyAllows()
+    public async Task UserService_ShouldReturnSuccessOnChangePassword_WhenPolicyAllows()
     {
         //Arrange
-        var context = new LoginUserContext(command);
-        _userRepositoryMock.GetAsync(context.Email).Returns(user);
-        _userPolicyMock.IsLoginAllowedAsync(user, context).Returns(PolicyResult.Success);
+        var context = new ChangePasswordContext(command with { UserId = user.Id });
+        _userRepositoryMock.GetAsync(context.UserId).Returns(user);
+        _passwordPolicyMock.IsPasswordChangeAllowedAsync(user, context).Returns(PolicyResult.Success);
 
         //Act
-        var result = await _service.LoginAsync(context);
+        var result = await _service.ChangePasswordAsync(context);
 
         //Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(user);
     }
 }

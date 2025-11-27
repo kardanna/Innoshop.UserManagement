@@ -12,7 +12,7 @@ using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Services;
 
-public class RegisterUserServiceTests
+public class UserServices_RegisterTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly IUserDeactivationRepository _userDeactivationRepositoryMock;
@@ -24,7 +24,7 @@ public class RegisterUserServiceTests
 
     private readonly IUserService _service;
 
-    public RegisterUserServiceTests()
+    public UserServices_RegisterTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _userDeactivationRepositoryMock = Substitute.For<IUserDeactivationRepository>();

@@ -12,7 +12,7 @@ using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Policies;
 
-public class DeactivateUserPolicyTests
+public class UserPolicy_ReactivationTests
 {
     private readonly IUserRepository _userRepositoryMock;
     private readonly ILoginAttemptRepository _loginRepositoryMock;
@@ -23,7 +23,7 @@ public class DeactivateUserPolicyTests
 
     private readonly IUserPolicy _policy;
 
-    public DeactivateUserPolicyTests()
+    public UserPolicy_ReactivationTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _loginRepositoryMock = Substitute.For<ILoginAttemptRepository>();
@@ -60,36 +60,38 @@ public class DeactivateUserPolicyTests
         IsDeleted = false
     };
 
+    private static readonly UserDeactivation record = new();
+
     [Fact]
-    public async Task UserPolicy_ShouldDenyDeactivation_WhenSubjectUserIsDeleted()
+    public async Task UserPolicy_ShouldDenyReactivation_WhenSubjectUserIsDeleted()
     {
         //Arrange
         user.IsDeleted = true;
         requester.IsDeleted = false;
 
         //Act
-        var result = await _policy.IsDeactivationAllowedAsync(user, requester);
+        var result = await _policy.IsReactivationAllowedAsync(user, requester, record);
 
         //Assert
         result.Error.Should().Be(DomainErrors.User.NotFound);
     }
 
     [Fact]
-    public async Task UserPolicy_ShouldDenyDeactivation_WhenRequesterIsDeleted()
+    public async Task UserPolicy_ShouldDenyReactivation_WhenRequesterIsDeleted()
     {
         //Arrange
         user.IsDeleted = false;
         requester.IsDeleted = true;
 
         //Act
-        var result = await _policy.IsDeactivationAllowedAsync(user, requester);
+        var result = await _policy.IsReactivationAllowedAsync(user, requester, record);
 
         //Assert
         result.Error.Should().Be(DomainErrors.User.NotFound);
     }
 
     [Fact]
-    public async Task UserPolicy_ShouldDenyDeactivation_WhenSubjectUserIsAdmin()
+    public async Task UserPolicy_ShouldDenyReactivation_WhenSubjectUserIsAdmin()
     {
         //Arrange
         user.IsDeleted = false;
@@ -97,72 +99,103 @@ public class DeactivateUserPolicyTests
         user.Roles = [ Role.Administrator ];
 
         //Act
-        var result = await _policy.IsDeactivationAllowedAsync(user, user);
+        var result = await _policy.IsReactivationAllowedAsync(user, user, record);
 
         //Assert
-        result.Error.Should().Be(DomainErrors.Deactivation.CannotDeactivateAdmin);
+        result.Error.Should().Be(DomainErrors.Reactivation.CannotReactivateAdmin);
     }
-
+    
     [Fact]
-    public async Task UserPolicy_ShouldDenyDeactivation_WhenSubjectIsNotRequesterAndRequesterIsNotAdmin()
-    {
-        //Arrange
-        user.IsDeleted = false;
-        requester.IsDeleted = false;
-        user.Roles = [ Role.Customer ];
-        requester.Roles = [ Role.Customer ];
-
-        //Act
-        var result = await _policy.IsDeactivationAllowedAsync(user, requester);
-
-        //Assert
-        result.Error.Should().Be(DomainErrors.Deactivation.NotAdminRequester);
-    }
-
-    [Fact]
-    public async Task UserPolicy_ShouldDenyDeactivation_WhenSubjectIsAlreadyDeactivated()
-    {
-        //Arrange
-        user.IsDeleted = false;
-        requester.IsDeleted = false;
-        user.Roles = [ Role.Customer ];
-        _userDeactivationRepositoryMock.GetLatestAsync(user.Id).Returns(new UserDeactivation());
-
-        //Act
-        var result = await _policy.IsDeactivationAllowedAsync(user, user);
-
-        //Assert
-        result.Error.Should().Be(DomainErrors.Deactivation.AlreadyDeactivated);
-    }
-
-    [Fact]
-    public async Task UserPolicy_ShouldAllowDeactivation_WhenAllRulesApplyAndSubjectIsRequester()
+    public async Task UserPolicy_ShouldDenyReactivation_WhenSubjectIsAlreadyReactivated()
     {
         //Arrange
         user.IsDeleted = false;
         requester.IsDeleted = false;
         user.Roles = [ Role.Customer ];
         _userDeactivationRepositoryMock.GetLatestAsync(user.Id).Returns((UserDeactivation)null!);
+        record.ReactivatedAt = new DateTime();
 
         //Act
-        var result = await _policy.IsDeactivationAllowedAsync(user, user);
+        var result = await _policy.IsReactivationAllowedAsync(user, user, record);
 
         //Assert
-        result.Should().Be(PolicyResult.Success);
+        result.Error.Should().Be(DomainErrors.Reactivation.AlreadyReactivated);
     }
 
     [Fact]
-    public async Task UserPolicy_ShouldAllowDeactivation_WhenAllRulesApplyAndRequesterIsAdmin()
+    public async Task UserPolicy_ShouldDenyReactivation_WhenRequesterIsSubjectAndSubjectIsNotAdminAndSubjectWasDeactivatedByAdmin()
     {
         //Arrange
         user.IsDeleted = false;
         requester.IsDeleted = false;
         user.Roles = [ Role.Customer ];
         requester.Roles = [ Role.Administrator ];
-        _userDeactivationRepositoryMock.GetLatestAsync(user.Id).Returns((UserDeactivation)null!);
+        record.ReactivatedAt = null;
+        record.User = user;
+        record.UserId = user.Id;
+        record.DeactivationRequester = requester;
 
         //Act
-        var result = await _policy.IsDeactivationAllowedAsync(user, requester);
+        var result = await _policy.IsReactivationAllowedAsync(user, user, record);
+
+        //Assert
+        result.Error.Should().Be(DomainErrors.Reactivation.NotAuthorized);
+    }
+
+    [Fact]
+    public async Task UserPolicy_ShouldDenyReactivation_WhenRequesterIsNotSubjectAndRequesterIsNotAdmin()
+    {
+        //Arrange
+        user.IsDeleted = false;
+        requester.IsDeleted = false;
+        user.Roles = [ Role.Customer ];
+        requester.Roles = [ Role.Customer ];
+        record.ReactivatedAt = null;
+        record.User = user;
+        record.UserId = user.Id;
+        record.DeactivationRequester = user;
+
+        //Act
+        var result = await _policy.IsReactivationAllowedAsync(user, requester, record);
+
+        //Assert
+        result.Error.Should().Be(DomainErrors.Reactivation.NotAuthorized);
+    }
+
+    [Fact]
+    public async Task UserPolicy_ShouldAllowReactivation_WhenRequesterIsSubjectAndSubjectWasNotDeactivatedByAdmin()
+    {
+        //Arrange
+        user.IsDeleted = false;
+        requester.IsDeleted = false;
+        user.Roles = [ Role.Customer ];
+        record.ReactivatedAt = null;
+        record.User = user;
+        record.UserId = user.Id;
+        record.DeactivationRequester = user;
+
+        //Act
+        var result = await _policy.IsReactivationAllowedAsync(user, user, record);
+
+        //Assert
+        result.Should().Be(PolicyResult.Success);
+    }
+
+    [Fact]
+    public async Task UserPolicy_ShouldAllowReactivation_WhenRequesterIsNotSubjectAndRequesterIsAdmin()
+    {
+        //Arrange
+        user.IsDeleted = false;
+        requester.IsDeleted = false;
+        user.Roles = [ Role.Customer ];
+        requester.Roles = [ Role.Administrator ];
+        record.ReactivatedAt = null;
+        record.User = user;
+        record.UserId = user.Id;
+        record.DeactivationRequester = user;
+
+        //Act
+        var result = await _policy.IsReactivationAllowedAsync(user, requester, record);
 
         //Assert
         result.Should().Be(PolicyResult.Success);

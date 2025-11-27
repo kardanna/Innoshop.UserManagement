@@ -31,7 +31,7 @@ public class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, GetUs
 
         var response = new GetUserResponse(
             user: user.Value,
-            isDeactivated: await _userService.IsUserDeacivated(user.Value.Id)
+            isDeactivated: await _userService.IsDeacivated(user.Value.Id)
         );
 
         return response;

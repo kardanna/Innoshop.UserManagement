@@ -12,14 +12,14 @@ using UserManagement.Domain.Errors;
 
 namespace UserManagement.Application.UnitTests.Policies;
 
-public class PasswordChangePolicyTests
+public class PasswordPolicy_ChangeTests
 {
     private readonly IOptions<Options.PasswordOptions> _passwordOptionsMock;
     private readonly IPasswordHasher<User> _hasherMock;
 
     private readonly IPasswordPolicy _policy;
 
-    public PasswordChangePolicyTests()
+    public PasswordPolicy_ChangeTests()
     {
         _passwordOptionsMock = Substitute.For<IOptions<Options.PasswordOptions>>();
         _hasherMock = Substitute.For<IPasswordHasher<User>>();
