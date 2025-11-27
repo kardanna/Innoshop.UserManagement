@@ -15,20 +15,17 @@ public class EmailService : IEmailService
     private readonly IEmailVerificationAttemptRepository _repository;
     private readonly IEmailPolicy _emailPolicy;
     private readonly IEmailSender _emailSender;
-    private readonly EmailOptions _emailOptions;
     private readonly IUrlProvider _urlProvider;
 
     public EmailService(
         IEmailVerificationAttemptRepository repository,
         IEmailPolicy emailPolicy,
         IEmailSender emailSender,
-        IOptions<EmailOptions> emailOptions,
         IUrlProvider urlProvider)
     {
         _repository = repository;
         _emailPolicy = emailPolicy;
         _emailSender = emailSender;
-        _emailOptions = emailOptions.Value;
         _urlProvider = urlProvider;
     }
 
@@ -99,6 +96,18 @@ public class EmailService : IEmailService
         return Result.Success();
     }
 
+    public async Task ClearUserRecordsAsync(Guid userId)
+    {
+        _repository.RemoveAllUserAttempts(userId);
+    }
+
+    public async Task<Result> SendPasswordResorationCode(string email, string code)
+    {
+        string? endpoint = _urlProvider.GetUrlForPasswordRestoreEndpoint();
+
+        return await _emailSender.SendPasswordRestorationMessageAsync(email, code, endpoint);
+    }
+
     private static string GenerateVerificationCode(int size = 32)
     {
         var randomNumber = new byte[size];
@@ -110,17 +119,5 @@ public class EmailService : IEmailService
             .TrimEnd('=');
 
         return base64;
-    }
-
-    public async Task ClearUserRecordsAsync(Guid userId)
-    {
-        _repository.RemoveAllUserAttempts(userId);
-    }
-
-    public async Task<Result> SendPasswordResorationCode(string email, string code)
-    {
-        string? endpoint = _urlProvider.GetUrlForPasswordRestoreEndpoint();
-
-        return await _emailSender.SendPasswordRestorationMessageAsync(email, code, endpoint);
     }
 }

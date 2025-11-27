@@ -23,20 +23,30 @@ public class PasswordPolicy : IPasswordPolicy
 
     public async Task<PolicyResult> IsPasswordChangeAllowedAsync(User user, ChangePasswordContext context)
     {
-        var passwordMatch = _hasher.VerifyHashedPassword(null!, user.PasswordHash, context.OldPassword);
-
-        if (passwordMatch == PasswordVerificationResult.Failed) return DomainErrors.PasswordChange.EmptyOrWrongPassword;
+        if (user.IsDeleted) return DomainErrors.User.NotFound;
+        
+        if (IsPasswordDoesNotMatch(user, context.OldPassword)) return DomainErrors.PasswordChange.EmptyOrWrongPassword;
 
         return PolicyResult.Success;
     }
 
     public async Task<PolicyResult> IsPasswordRestoreAllowed(PasswordRestoreAttempt attempt)
-    {
-        var isAttemptExpired = attempt.AttemptedAt
-            < DateTime.UtcNow.AddHours(-_passwordOptions.PasswordRestoreAttemptLifetimeInHours);
-        
-        if (isAttemptExpired) return DomainErrors.PasswordRestore.InvalidOrExpiredRestoreCode;
+    {        
+        if (attempt.User.IsDeleted) return DomainErrors.User.NotFound;
+
+        if (IsAttemptExpired(attempt)) return DomainErrors.PasswordRestore.InvalidOrExpiredRestoreCode;
 
         return PolicyResult.Success;
+    }
+
+    private bool IsPasswordDoesNotMatch(User user, string password)
+    {
+        return _hasher.VerifyHashedPassword(null!, user.PasswordHash, password) != PasswordVerificationResult.Success;
+    }
+
+    private bool IsAttemptExpired(PasswordRestoreAttempt attempt)
+    {
+        return attempt.AttemptedAt
+            < DateTime.UtcNow.AddHours(-_passwordOptions.PasswordRestoreAttemptLifetimeInHours);
     }
 }
