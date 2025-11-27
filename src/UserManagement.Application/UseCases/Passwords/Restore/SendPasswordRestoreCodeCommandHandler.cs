@@ -26,7 +26,7 @@ public class SendPasswordRestoreCodeCommandHandler : ICommandHandler<SendPasswor
 
         if (attemptCode.IsFailure) return attemptCode;
 
-        var sendEmailResult = await _emailService.SendPasswordRestoreCode(request.Email, attemptCode);
+        var sendEmailResult = await _emailService.SendPasswordRestoreCodeAsync(request.Email, attemptCode);
         
         if (sendEmailResult.IsFailure) return sendEmailResult;
 

@@ -9,6 +9,6 @@ public interface IEmailService
     Task<Result> VerifyAccountAsync(User user);
     Task<Result> ChangeEmailAsync(EmailChangeContext context);
     Task<Result> ConfirmRequestAsync(string verificationCode);
-    Task<Result> SendPasswordRestoreCode(string email, string code);
+    Task<Result> SendPasswordRestoreCodeAsync(string email, string code);
     Task ClearUserRecordsAsync(Guid userId);
 }

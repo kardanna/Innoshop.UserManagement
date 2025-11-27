@@ -94,7 +94,7 @@ public class EmailService : IEmailService
         return Result.Success();
     }
 
-    public async Task<Result> SendPasswordRestoreCode(string email, string code)
+    public async Task<Result> SendPasswordRestoreCodeAsync(string email, string code)
     {
         string? endpoint = _urlProvider.GetUrlForPasswordRestoreEndpoint();
 
