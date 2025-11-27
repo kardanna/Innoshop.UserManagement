@@ -19,8 +19,12 @@ public class VerifyEmailAddressCommandHandler : ICommandHandler<VerifyEmailAddre
 
     public async Task<Result> Handle(VerifyEmailAddressCommand request, CancellationToken cancellationToken)
     {
-        var response = await _service.ConfirmSednedRequestAsync(request.VerificationCode);
-        if (response.IsSuccess) await _unitOfWork.SaveChangesAsync();
-        return response;
+        var result = await _service.ConfirmRequestAsync(request.VerificationCode);
+
+        if (result.IsFailure) return result;
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return result;
     }
 }

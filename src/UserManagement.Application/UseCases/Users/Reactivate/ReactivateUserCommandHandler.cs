@@ -7,16 +7,36 @@ namespace UserManagement.Application.UseCases.Users.Reactivate;
 public class ReactivateUserCommandHandler : ICommandHandler<ReactivateUserCommand>
 {
     private readonly IUserService _userService;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInnoshopNotifier _innoshopNotifier;
 
-    public ReactivateUserCommandHandler(IUserService userService)
+    public ReactivateUserCommandHandler(
+        IUserService userService,
+        IUnitOfWork unitOfWork,
+        IInnoshopNotifier innoshopNotifier)
     {
         _userService = userService;
+        _unitOfWork = unitOfWork;
+        _innoshopNotifier = innoshopNotifier;
     }
 
     public async Task<Result> Handle(ReactivateUserCommand request, CancellationToken cancellationToken)
     {
-        var response = await _userService.ReactivateAsync(request.UserId, request.RequesterId);
+        var reactivationResult = await _userService.ReactivateAsync(request.UserId, request.RequesterId);
 
-        return response;
+        if (reactivationResult.IsFailure) return reactivationResult;
+
+        var notificationResult = await _innoshopNotifier.SendUserReactivatedNotificationAsync(new()
+            {
+                UserId = request.UserId,
+                TimeStamp = DateTime.UtcNow
+            }
+        );
+
+        if (notificationResult.IsFailure) return notificationResult;
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return notificationResult;
     }
 }

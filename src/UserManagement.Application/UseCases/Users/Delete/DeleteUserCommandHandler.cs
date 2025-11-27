@@ -31,22 +31,24 @@ public class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand>
     {
         var context = new DeleteUserContext(request);
 
-        var result = await _userService.DeleteAsync(context);
+        var deletionResult = await _userService.DeleteAsync(context);
 
-        if (result.IsFailure) return result;
+        if (deletionResult.IsFailure) return deletionResult;
 
         await _emailService.ClearUserRecordsAsync(request.SubjectId);
 
         await _tokenProvider.RevokeAllTokensAsync(request.SubjectId);
 
-        await _unitOfWork.SaveChangesAsync();
-
-        await _innoshopNotifier.SendUserDeletedNotificationAsync(new()
+        var notificationResult = await _innoshopNotifier.SendUserDeletedNotificationAsync(new()
             {
                 UserId = request.SubjectId,
                 TimeStamp = DateTime.UtcNow
             }
         );
+
+        if (notificationResult.IsFailure) return notificationResult;
+
+        await _unitOfWork.SaveChangesAsync();
 
         return Result.Success();
     }

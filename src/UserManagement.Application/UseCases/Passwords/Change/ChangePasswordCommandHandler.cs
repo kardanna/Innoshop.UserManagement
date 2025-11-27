@@ -25,12 +25,14 @@ public class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComman
     {
         var context = new ChangePasswordContext(request);
 
-        var response = await _userService.ChangePasswordAsync(context);
+        var result = await _userService.ChangePasswordAsync(context);
+
+        if (result.IsFailure) return result;
 
         await _tokenProvider.RevokeAllTokensAsync(request.UserId);
 
         await _unitOfWork.SaveChangesAsync();
 
-        return response;
+        return result;
     }
 }

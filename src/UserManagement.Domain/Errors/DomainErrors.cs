@@ -44,6 +44,11 @@ public static class DomainErrors
             "Deletion.WrongPassword",
             "Password is empty or wrong."
         );
+
+        public static readonly Error FailedToSendNotification = new(
+            "Deletion.FailedToSendNotification",
+            "Service failed to send user deletion notification."
+        );
     }
 
     public static class Deactivation
@@ -62,6 +67,11 @@ public static class DomainErrors
             "Deactivation.NotAdminRequester",
             "Only admin users can deactivate other users."
         );
+
+        public static readonly Error FailedToSendNotification = new(
+            "Deactivation.FailedToSendNotification",
+            "Service failed to send user deactivation notification."
+        );
     }
 
     public static class Reactivation
@@ -79,6 +89,11 @@ public static class DomainErrors
         public static readonly Error NotAuthorized = new(
             "Reactivation.NotAuthorized",
             "Only admin or user requested deactivation may reactivate the user. Only admin users can reactivate users that were deactivated by admin."
+        );
+
+        public static readonly Error FailedToSendNotification = new(
+            "Reactivation.FailedToSendNotification",
+            "Service failed to send user reactivation notification."
         );
     }
 

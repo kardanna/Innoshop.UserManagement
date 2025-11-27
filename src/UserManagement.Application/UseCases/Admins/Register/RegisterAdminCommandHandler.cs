@@ -12,15 +12,18 @@ public class RegisterAdminCommandHandler : ICommandHandler<RegisterAdminCommand,
 {
     private readonly IUserService _userService;
     private readonly IEmailService _emailService;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<RegisterAdminCommandHandler> _logger;
 
     public RegisterAdminCommandHandler(
         IUserService userService,
         IEmailService emailService,
+        IUnitOfWork unitOfWork,
         ILogger<RegisterAdminCommandHandler> logger)
     {
         _userService = userService;
         _emailService = emailService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -34,20 +37,18 @@ public class RegisterAdminCommandHandler : ICommandHandler<RegisterAdminCommand,
 
         if (user.IsFailure) return user.Error;
 
-        await _emailService.SendRequestToVerifyUserAccountAsync(user.Value);
+        var sendEmailResult = await _emailService.VerifyAccountAsync(user.Value);
 
-        var response = new GetUserResponse(
-            user.Value.Id,
-            user.Value.FirstName,
-            user.Value.LastName,
-            user.Value.DateOfBirth,
-            user.Value.Email,
-            user.Value.Roles.Select(r => r.Name),
-            user.Value.IsEmailVerified,
-            await _userService.IsUserDeacivated(user.Value.Id)
-        );
+        if (sendEmailResult.IsFailure) return sendEmailResult.Error;
+
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogWarning("New administrator '{UserId}' registered successfully. Email verification pending.", user.Value.Id);
+
+        var response = new GetUserResponse(
+            user: user.Value,
+            isDeactivated: await _userService.IsUserDeacivated(user.Value.Id)
+        );
 
         return response;
     }

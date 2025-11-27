@@ -31,21 +31,15 @@ public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, G
 
         if (user.IsFailure) return user.Error;
 
-        var sendEmailResult = await _emailService.SendRequestToVerifyUserAccountAsync(user.Value);
+        var sendEmailResult = await _emailService.VerifyAccountAsync(user.Value);
 
         if (sendEmailResult.IsFailure) return sendEmailResult.Error;
 
         await _unitOfWork.SaveChangesAsync();
 
         var response = new GetUserResponse(
-            user.Value.Id,
-            user.Value.FirstName,
-            user.Value.LastName,
-            user.Value.DateOfBirth,
-            user.Value.Email,
-            user.Value.Roles.Select(r => r.Name),
-            user.Value.IsEmailVerified,
-            await _userService.IsUserDeacivated(user.Value.Id)
+            user: user.Value,
+            isDeactivated: false
         );
 
         return response;

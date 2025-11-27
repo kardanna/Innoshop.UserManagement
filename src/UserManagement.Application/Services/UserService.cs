@@ -16,10 +16,8 @@ public class UserService : IUserService
     private readonly IPasswordRestoreAttemptRepository _passwordRestoreAttemptRepository;
     private readonly ILoginAttemptRepository _loginRepository;
     private readonly IPasswordHasher<User> _hasher;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IUserPolicy _userPolicy;
     private readonly IPasswordPolicy _passwordPolicy;
-    private readonly IInnoshopNotifier _innoshopNotifier;
 
     public UserService(
         IUserRepository userRepository,
@@ -27,20 +25,16 @@ public class UserService : IUserService
         IPasswordRestoreAttemptRepository passwordRestoreAttemptRepository,
         ILoginAttemptRepository loginRepository,
         IPasswordHasher<User> hasher,
-        IUnitOfWork unitOfWork,
         IUserPolicy userPolicy,
-        IPasswordPolicy passwordPolicy,
-        IInnoshopNotifier innoshopNotifier)
+        IPasswordPolicy passwordPolicy)
     {
         _userRepository = userRepository;
         _userDeactivationRepository = userDeactivationRepository;
         _loginRepository = loginRepository;
         _passwordRestoreAttemptRepository = passwordRestoreAttemptRepository;
         _hasher = hasher;
-        _unitOfWork = unitOfWork;
         _userPolicy = userPolicy;
         _passwordPolicy = passwordPolicy;
-        _innoshopNotifier = innoshopNotifier;
     }
 
     private const string DEACTIVATED_BY_HIMSELF_COMMENTARY = "Request issued by user";
@@ -80,8 +74,6 @@ public class UserService : IUserService
 
         _userRepository.Add(user);
 
-        //Save on DB context is performed inside Email service after sending verification email 
-
         return user;
     }
 
@@ -116,8 +108,6 @@ public class UserService : IUserService
         user.FirstName = context.FirstName;
         user.LastName = context.LastName;
         user.DateOfBirth = context.DateOfBirth;
-
-        await _unitOfWork.SaveChangesAsync();
 
         return user;
     }
@@ -159,15 +149,6 @@ public class UserService : IUserService
 
         _userDeactivationRepository.Add(deactivationRecord);
 
-        await _unitOfWork.SaveChangesAsync();
-
-        await _innoshopNotifier.SendUserDeactivatedNotificationAsync(new()
-            {
-                UserId = subject.Id,
-                TimeStamp = deactivationRecord.DeactivatedAt
-            }
-        );
-
         return Result.Success();
     }
 
@@ -198,15 +179,6 @@ public class UserService : IUserService
 
         record.ReactivatedAt = DateTime.UtcNow;
         record.ReactivationRequester = requester;
-
-        await _unitOfWork.SaveChangesAsync();
-
-        await _innoshopNotifier.SendUserReactivatedNotificationAsync(new()
-            {
-                UserId = subject.Id,
-                TimeStamp = DateTime.UtcNow
-            }
-        );
 
         return Result.Success();
     }
@@ -242,22 +214,20 @@ public class UserService : IUserService
 
         _userDeactivationRepository.RemoveAllForUser(context.SubjectId);
 
-        //await _unitOfWork.SaveChangesAsync(); //Changes are saved in email service after clearing up user records;
-
         return Result.Success();
     }
 
     public async Task<Result> ChangePasswordAsync(ChangePasswordContext context)
     {
         var user = await _userRepository.GetAsync(context.UserId);
+
         if (user is null) return Result.Failure(DomainErrors.User.NotFound);
 
         var attempt = await _passwordPolicy.IsPasswordChangeAllowedAsync(user, context);
+
         if (attempt.IsDenied) return Result.Failure(attempt.Error);
 
         user.PasswordHash = _hasher.HashPassword(null!, context.NewPassword);
-
-        await _unitOfWork.SaveChangesAsync();
 
         return Result.Success();
     }
@@ -279,8 +249,6 @@ public class UserService : IUserService
 
         _passwordRestoreAttemptRepository.Add(attempt);
 
-        await _unitOfWork.SaveChangesAsync();
-
         return attempt.AttemptCode;
     }
 
@@ -297,8 +265,6 @@ public class UserService : IUserService
         restoreAttempt.User.PasswordHash = _hasher.HashPassword(null!, newPassword);
         restoreAttempt.IsSucceeded = true;
         restoreAttempt.SucceededAt = DateTime.UtcNow;
-        
-        await _unitOfWork.SaveChangesAsync();
 
         return restoreAttempt.User.Id;
     }

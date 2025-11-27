@@ -30,14 +30,8 @@ public class GetUserQueryHandler : IQueryHandler<GetUserQuery, GetUserResponse>
         if (user.IsFailure) return user.Error;
 
         var response = new GetUserResponse(
-            user.Value.Id,
-            user.Value.FirstName,
-            user.Value.LastName,
-            user.Value.DateOfBirth,
-            user.Value.Email,
-            user.Value.Roles.Select(r => r.Name),
-            user.Value.IsEmailVerified,
-            await _userService.IsUserDeacivated(user.Value.Id)
+            user: user.Value,
+            isDeactivated: await _userService.IsUserDeacivated(user.Value.Id)
         );
 
         return response;

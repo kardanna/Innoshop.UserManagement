@@ -19,10 +19,12 @@ public class LogoutUserCommandHandler : ICommandHandler<LogoutUserCommand>
 
     public async Task<Result> Handle(LogoutUserCommand request, CancellationToken cancellationToken)
     {
-        var response = await _provider.RevokeTokenAsync(request.TokenId);
+        var result = await _provider.RevokeTokenAsync(request.TokenId);
+
+        if (result.IsFailure) return result;
 
         await _unitOfWork.SaveChangesAsync();
 
-        return response;
+        return result;
     }
 }

@@ -76,7 +76,7 @@ public class TokenProvider : ITokenProvider
     {
         var tokenRecord = await _tokenRepository.GetAsync(refreshToken);
 
-        if (tokenRecord == null) return DomainErrors.RefreshToken.NotFound;
+        if (tokenRecord is null) return DomainErrors.RefreshToken.NotFound;
 
         var isRefreshTokenExpired = tokenRecord.IssuedAt.AddMinutes(_jwtOptions.RefreshTokenLifetimeMinutes) < DateTime.UtcNow;
         if (isRefreshTokenExpired)
@@ -89,8 +89,7 @@ public class TokenProvider : ITokenProvider
         _tokenRepository.Revome(tokenRecord.AccessTokenId); 
 
         var newToken = await GenerateFromLoginAsync(tokenRecord.User, tokenRecord.DeviceFingerprint);
-        //if old access! token has not yet expired - post a message saying it's invalid!!!!!!!!!!!!
-        //and to own redis
+        //if old access! token has not yet expired - send it to redis!!!!!!!!!!!
 
         return newToken;
     }
@@ -99,7 +98,7 @@ public class TokenProvider : ITokenProvider
     {
         var token = await _tokenRepository.GetAsync(tokenId);
 
-        if (token == null) return Result.Success();
+        if (token is null) return Result.Success();
 
         _tokenRepository.Revome(tokenId);
 
@@ -119,7 +118,6 @@ public class TokenProvider : ITokenProvider
         {
             if (token.AccessTokenExpiresAt > DateTime.UtcNow)
             {
-                Console.WriteLine($"Revoked unexpired access token '{token.AccessTokenId}' of user '{token.UserId}'");
                 //Publish revoked token to redis!!!!!!
             }
         }

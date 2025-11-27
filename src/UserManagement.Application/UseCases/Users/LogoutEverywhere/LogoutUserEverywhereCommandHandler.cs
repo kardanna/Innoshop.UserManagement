@@ -19,11 +19,12 @@ public class LogoutUserEverywhereCommandHandler : ICommandHandler<LogoutUserEver
 
     public async Task<Result> Handle(LogoutUserEverywhereCommand request, CancellationToken cancellationToken)
     {
-        //log requester???
-        var response = await _provider.RevokeAllTokensAsync(request.UserId);
+        var result = await _provider.RevokeAllTokensAsync(request.UserId);
+
+        if (result.IsFailure) return result;
 
         await _unitOfWork.SaveChangesAsync();
 
-        return response;
+        return result;
     }
 }

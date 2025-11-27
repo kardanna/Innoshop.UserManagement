@@ -29,10 +29,12 @@ public class ChangeEmailAddressCommandHandler : ICommandHandler<ChangeEmailAddre
 
         var context = new EmailChangeContext(user, request.NewEmail);
 
-        var response = await _emailService.SendRequestToChangeUserEmailAsync(context);
+        var emailChangeResult = await _emailService.ChangeEmailAsync(context);
 
-        if (response.IsSuccess) await _unitOfWork.SaveChangesAsync();
+        if (emailChangeResult.IsFailure) return emailChangeResult;
 
-        return response;
+        await _unitOfWork.SaveChangesAsync();
+
+        return emailChangeResult;
     }
 }

@@ -22,6 +22,8 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, L
     {
         var result = await _tokenService.GenerateFromRefreshTokenAsync(request.RefreshToken);
 
+        if (result.IsFailure) return result;
+
         await _unitOfWork.SaveChangesAsync();
 
         return result;

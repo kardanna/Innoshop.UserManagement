@@ -1,8 +1,6 @@
 using System.Security.Cryptography;
-using Microsoft.Extensions.Options;
 using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
-using UserManagement.Application.Options;
 using UserManagement.Application.Repositories;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
@@ -29,7 +27,7 @@ public class EmailService : IEmailService
         _urlProvider = urlProvider;
     }
 
-    public async Task<Result> SendRequestToVerifyUserAccountAsync(User user)
+    public async Task<Result> VerifyAccountAsync(User user)
     {
         var request = new EmailVerificationAttempt()
         {
@@ -46,7 +44,7 @@ public class EmailService : IEmailService
         return await _emailSender.SendAccountVerificationMessageAsync(request.Email, request.VerificationCode, verificationUrl);
     }
 
-    public async Task<Result> SendRequestToChangeUserEmailAsync(EmailChangeContext context)
+    public async Task<Result> ChangeEmailAsync(EmailChangeContext context)
     {
         var attempt = await _emailPolicy.IsEmailChangeAllowed(context);
 
@@ -70,7 +68,7 @@ public class EmailService : IEmailService
         return await _emailSender.SendEmailAddressVerificationMessageAsync(request.Email, request.VerificationCode, verificationUrl);
     }
 
-    public async Task<Result> ConfirmSednedRequestAsync(string verificationCode)
+    public async Task<Result> ConfirmRequestAsync(string verificationCode)
     {
         var attemptRecord = await _repository.GetAsync(verificationCode);
 
@@ -96,16 +94,16 @@ public class EmailService : IEmailService
         return Result.Success();
     }
 
-    public async Task ClearUserRecordsAsync(Guid userId)
-    {
-        _repository.RemoveAllUserAttempts(userId);
-    }
-
-    public async Task<Result> SendPasswordResorationCode(string email, string code)
+    public async Task<Result> SendPasswordRestoreCode(string email, string code)
     {
         string? endpoint = _urlProvider.GetUrlForPasswordRestoreEndpoint();
 
         return await _emailSender.SendPasswordRestorationMessageAsync(email, code, endpoint);
+    }
+
+    public async Task ClearUserRecordsAsync(Guid userId)
+    {
+        _repository.RemoveAllUserAttempts(userId);
     }
 
     private static string GenerateVerificationCode(int size = 32)

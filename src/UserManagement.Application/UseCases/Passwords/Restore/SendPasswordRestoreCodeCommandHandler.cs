@@ -8,13 +8,16 @@ public class SendPasswordRestoreCodeCommandHandler : ICommandHandler<SendPasswor
 {
     private readonly IUserService _userService;
     private readonly IEmailService _emailService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public SendPasswordRestoreCodeCommandHandler(
         IUserService userService,
-        IEmailService emailService)
+        IEmailService emailService,
+        IUnitOfWork unitOfWork)
     {
         _userService = userService;
         _emailService = emailService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(SendPasswordRestoreCodeCommand request, CancellationToken cancellationToken)
@@ -23,8 +26,12 @@ public class SendPasswordRestoreCodeCommandHandler : ICommandHandler<SendPasswor
 
         if (attemptCode.IsFailure) return attemptCode;
 
-        var response = await _emailService.SendPasswordResorationCode(request.Email, attemptCode);
+        var sendEmailResult = await _emailService.SendPasswordRestoreCode(request.Email, attemptCode);
+        
+        if (sendEmailResult.IsFailure) return sendEmailResult;
 
-        return response;
+        await _unitOfWork.SaveChangesAsync();
+
+        return sendEmailResult;
     }
 }
