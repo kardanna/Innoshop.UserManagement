@@ -2,12 +2,12 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
-using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using Microsoft.Extensions.Logging;
 using UserManagement.Presentation.DTOs;
 using UserManagement.Application.UseCases.Users.Delete;
+using Innoshop.Contracts.UserManagement.UserRoles;
 
 namespace UserManagement.Presentation.Controllers;
 

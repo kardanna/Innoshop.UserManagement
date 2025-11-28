@@ -1,8 +1,8 @@
+using Innoshop.Contracts.UserManagement.UserRoles;
 using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
 using UserManagement.Application.Messaging;
 using UserManagement.Application.UseCases.Users.Get;
-using UserManagement.Domain.Entities;
 using UserManagement.Domain.Shared;
 
 namespace UserManagement.Application.UseCases.Users.Register;

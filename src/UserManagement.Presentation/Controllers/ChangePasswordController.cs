@@ -8,6 +8,7 @@ using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using UserManagement.Presentation.DTOs;
 using Microsoft.Extensions.Logging;
+using Innoshop.Contracts.UserManagement.UserRoles;
 
 namespace UserManagement.Presentation.Controllers;
 

@@ -1,6 +1,6 @@
+using Innoshop.Contracts.UserManagement.UserRoles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using UserManagement.Domain.Entities;
 
 namespace UserManagement.Persistence.Configuration;
 

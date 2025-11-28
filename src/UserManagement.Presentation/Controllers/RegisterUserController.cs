@@ -9,6 +9,7 @@ using UserManagement.Application.UseCases.Admins.Register;
 using System.IdentityModel.Tokens.Jwt;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
+using Innoshop.Contracts.UserManagement.UserRoles;
 
 namespace UserManagement.Presentation.Controllers;
 

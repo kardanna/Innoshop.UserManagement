@@ -1,3 +1,5 @@
+using Innoshop.Contracts.UserManagement.UserRoles;
+
 namespace UserManagement.Domain.Entities;
 
 public class User

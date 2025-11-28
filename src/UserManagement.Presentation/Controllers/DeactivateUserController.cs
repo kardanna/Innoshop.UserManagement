@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using UserManagement.Application.UseCases.Users.Deactivate;
-using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using Microsoft.Extensions.Logging;
+using Innoshop.Contracts.UserManagement.UserRoles;
 
 namespace UserManagement.Presentation.Controllers;
 

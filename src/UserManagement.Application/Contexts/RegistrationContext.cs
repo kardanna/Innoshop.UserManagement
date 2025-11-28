@@ -1,5 +1,5 @@
+using Innoshop.Contracts.UserManagement.UserRoles;
 using UserManagement.Application.UseCases.Users.Register;
-using UserManagement.Domain.Entities;
 
 namespace UserManagement.Application.Contexts;
 

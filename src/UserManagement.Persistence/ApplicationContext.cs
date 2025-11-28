@@ -1,5 +1,6 @@
 using UserManagement.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Innoshop.Contracts.UserManagement.UserRoles;
 
 namespace UserManagement.Persistence;
 

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Innoshop.Contracts.UserManagement.UserRoles;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using UserManagement.Application.Contexts;

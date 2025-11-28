@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Innoshop.Contracts.UserManagement.UserRoles;
 using Microsoft.AspNetCore.Identity;
 using UserManagement.Application.Contexts;
 using UserManagement.Application.Interfaces;
