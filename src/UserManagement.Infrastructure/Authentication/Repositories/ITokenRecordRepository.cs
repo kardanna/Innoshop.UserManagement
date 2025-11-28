@@ -11,4 +11,5 @@ public interface ITokenRecordRepository
     void Revome(Guid accessTokenId);
     void Revome(string refreshToken);
     void RevomeRange(IEnumerable<TokenRecord> records);
+    Task<int> RemoveExpiredRecordsAsync(int refreshTokenLifetimeInMinutes);
 }

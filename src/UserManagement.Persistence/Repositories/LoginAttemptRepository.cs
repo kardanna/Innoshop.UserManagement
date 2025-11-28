@@ -31,4 +31,11 @@ public class LoginAttemptRepository : ILoginAttemptRepository
 
         _appContext.LoginAttempts.Add(attempt);
     }
+
+    public async Task<int> RemoveOldLoginAttemptsAsync(int attepmtConsideredOldAfterMinutes)
+    {
+        return await _appContext.LoginAttempts
+            .Where(a => a.AttemtedAt < DateTime.UtcNow.AddMinutes(-attepmtConsideredOldAfterMinutes))
+            .ExecuteDeleteAsync();
+    }
 }

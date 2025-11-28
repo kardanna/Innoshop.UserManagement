@@ -54,4 +54,11 @@ public class TokenRecordRepository : ITokenRecordRepository
     {
         _appContext.TokenRecords.RemoveRange(records);
     }
+
+    public async Task<int> RemoveExpiredRecordsAsync(int refreshTokenLifetimeInMinutes)
+    {
+        return await _appContext.TokenRecords
+            .Where(r => r.IssuedAt < DateTime.UtcNow.AddMinutes(-refreshTokenLifetimeInMinutes))
+            .ExecuteDeleteAsync();
+    }
 }

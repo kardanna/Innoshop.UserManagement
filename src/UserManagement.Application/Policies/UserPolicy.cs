@@ -66,7 +66,7 @@ public class UserPolicy : IUserPolicy
 
         if (!IsPasswordMatches(user, context.Password)) return DomainErrors.Login.WrongEmailOrPassword;
         
-        if (await IsLoginAttemptsDepleted(context.Email)) return DomainErrors.Login.TooManyAttempts;
+        if (await AreLoginAttemptsDepleted(context.Email)) return DomainErrors.Login.TooManyAttempts;
         
         return PolicyResult.Success;
     }
@@ -138,7 +138,7 @@ public class UserPolicy : IUserPolicy
         return await _userRepository.CountUsersWithEmailAsync(email) == 0;
     }
 
-    private async Task<bool> IsLoginAttemptsDepleted(string email)
+    private async Task<bool> AreLoginAttemptsDepleted(string email)
     {
         var numberOfAttempts = await _loginRepository
             .CountLoginAttemptsAsync(email, _loginOptions.LoginAttemptsTimeWindowInMinutes);

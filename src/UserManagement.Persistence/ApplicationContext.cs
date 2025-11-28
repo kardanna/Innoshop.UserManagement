@@ -22,6 +22,10 @@ public class ApplicationContext : DbContext
     public ApplicationContext(DbContextOptions<ApplicationContext> options)
         : base(options)
     {
+        foreach (var role in Role.GetValues())
+        {
+            this.Attach(role);
+        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

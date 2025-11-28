@@ -22,6 +22,7 @@ using UserManagement.Persistence.Repositories;
 using UserManagement.Infrastructure.Messaging.Abstractions;
 using UserManagement.Infrastructure.EmailSender;
 using UserManagement.Presentation;
+using UserManagement.Infrastructure.BackgroundJobs;
 
 namespace UserManagement.API;
 
@@ -142,9 +143,11 @@ public class Program
             cfg.RegisterServicesFromAssembly(UserManagement.Application.AssemblyReference.Assembly));
         
 
+        //Quartz
+        builder.Services.AddBackgroundJobs();
+
         var app = builder.Build();
-
-
+        
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
