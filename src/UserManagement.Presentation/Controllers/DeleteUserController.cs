@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using UserManagement.Domain.Errors;
@@ -8,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using UserManagement.Presentation.DTOs;
 using UserManagement.Application.UseCases.Users.Delete;
 using Innoshop.Contracts.UserManagement.UserRoles;
+using UserManagement.Presentation.Attributes;
 
 namespace UserManagement.Presentation.Controllers;
 
@@ -25,7 +25,7 @@ public class DeleteUserController : BaseApiController
     }
 
     [HttpDelete("me")]
-    [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
+    [HasRole(nameof(Role.Customer), nameof(Role.Administrator))]
     public async Task<IActionResult> DeleteMe([FromBody] DeleteUserRequest request)
     {
         var id = HttpContext.User.Claims
@@ -51,7 +51,7 @@ public class DeleteUserController : BaseApiController
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Administrator")]
+    [HasRole(nameof(Role.Administrator))]
     public async Task<IActionResult> DeleteById(Guid id)
     {
         var requesterId = HttpContext.User.Claims

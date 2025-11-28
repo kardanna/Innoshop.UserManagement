@@ -3,13 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using UserManagement.Presentation.DTOs;
 using UserManagement.Application.UseCases.Users.Register;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
-using UserManagement.Domain.Entities;
 using UserManagement.Application.UseCases.Admins.Register;
 using System.IdentityModel.Tokens.Jwt;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using Innoshop.Contracts.UserManagement.UserRoles;
+using UserManagement.Presentation.Attributes;
 
 namespace UserManagement.Presentation.Controllers;
 
@@ -50,7 +49,7 @@ public class RegisterUserController : BaseApiController
     }
 
     [HttpPost("admin/register")]
-    [Authorize(Roles = nameof(Role.Administrator))]
+    [HasRole(nameof(Role.Administrator))]
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterUserRequest request)
     {
         var requesterId = HttpContext.User.Claims

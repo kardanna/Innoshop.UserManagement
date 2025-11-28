@@ -1,15 +1,14 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using UserManagement.Application.UseCases.Users.Get;
 using UserManagement.Application.UseCases.Users.Logout;
 using UserManagement.Application.UseCases.Users.LogoutEverywhere;
-using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using Microsoft.Extensions.Logging;
 using Innoshop.Contracts.UserManagement.UserRoles;
+using UserManagement.Presentation.Attributes;
 
 namespace UserManagement.Presentation.Controllers;
 
@@ -27,7 +26,7 @@ public class LogoutUserController : BaseApiController
     }
 
     [HttpPost("me/logout")]
-    [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
+    [HasRole(nameof(Role.Customer), nameof(Role.Administrator))]
     public async Task<IActionResult> Logout()
     {
         var tokenId = HttpContext.User.Claims
@@ -51,7 +50,7 @@ public class LogoutUserController : BaseApiController
     }
 
     [HttpPost("me/logouteverywhere")]
-    [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
+    [HasRole(nameof(Role.Customer), nameof(Role.Administrator))]
     public async Task<IActionResult> LogoutEverywhere()
     {
         var userId = HttpContext.User.Claims
@@ -75,7 +74,7 @@ public class LogoutUserController : BaseApiController
     }
 
     [HttpPost("{userId:guid}/logouteverywhere")]
-    [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
+    [HasRole(nameof(Role.Administrator))]
     public async Task<IActionResult> Logout(Guid userId)
     {
         var requesterId = HttpContext.User.Claims

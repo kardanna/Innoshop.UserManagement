@@ -1,14 +1,13 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using UserManagement.Application.UseCases.Passwords.Change;
-using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using UserManagement.Presentation.DTOs;
 using Microsoft.Extensions.Logging;
 using Innoshop.Contracts.UserManagement.UserRoles;
+using UserManagement.Presentation.Attributes;
 
 namespace UserManagement.Presentation.Controllers;
 
@@ -26,7 +25,7 @@ public class ChangePasswordController : BaseApiController
     }
 
     [HttpPost("me/changepassword")]
-    [Authorize(Roles = nameof(Role.Customer) + "," + nameof(Role.Administrator))]
+    [HasRole(nameof(Role.Customer), nameof(Role.Administrator))]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
         var userId = HttpContext.User.Claims

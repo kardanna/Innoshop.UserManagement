@@ -4,10 +4,11 @@ using UserManagement.Presentation.DTOs;
 using UserManagement.Application.UseCases.EmailAddresses.Change;
 using UserManagement.Application.UseCases.EmailAddresses.Verify;
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Authorization;
 using UserManagement.Domain.Shared;
 using UserManagement.Domain.Errors;
 using Microsoft.Extensions.Logging;
+using UserManagement.Presentation.Attributes;
+using Innoshop.Contracts.UserManagement.UserRoles;
 
 namespace UserManagement.Presentation.Controllers;
 
@@ -37,8 +38,8 @@ public class EmailController : BaseApiController
         return Ok();
     }
     
-    [Authorize]
     [HttpPost("change")]
+    [HasRole(nameof(Role.Customer), nameof(Role.Administrator))]
     public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailRequest request)
     {
         foreach (var claim in HttpContext.User.Claims)

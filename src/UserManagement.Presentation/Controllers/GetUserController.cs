@@ -1,13 +1,12 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using UserManagement.Application.UseCases.Users.Get;
-using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using Microsoft.Extensions.Logging;
 using Innoshop.Contracts.UserManagement.UserRoles;
+using UserManagement.Presentation.Attributes;
 
 namespace UserManagement.Presentation.Controllers;
 
@@ -25,7 +24,7 @@ public class GetUserController : BaseApiController
     }
 
     [HttpGet("me")]
-    [Authorize(Roles = nameof(Role.Administrator) + "," + nameof(Role.Customer))]
+    [HasRole(nameof(Role.Customer), nameof(Role.Administrator))]
     public async Task<IActionResult> GetMe()
     {
         var id = HttpContext.User.Claims
@@ -47,7 +46,7 @@ public class GetUserController : BaseApiController
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Administrator")]
+    [HasRole(nameof(Role.Administrator))]
     public async Task<IActionResult> GetById(Guid id)
     {
         var requesterId = HttpContext.User.Claims

@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using UserManagement.Application.UseCases.Users.Deactivate;
@@ -7,6 +6,7 @@ using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
 using Microsoft.Extensions.Logging;
 using Innoshop.Contracts.UserManagement.UserRoles;
+using UserManagement.Presentation.Attributes;
 
 namespace UserManagement.Presentation.Controllers;
 
@@ -24,7 +24,7 @@ public class DeactivateUserController : BaseApiController
     }
 
     [HttpPost("me/deactivate")]
-    [Authorize(Roles = nameof(Role.Customer))]
+    [HasRole(nameof(Role.Customer))]
     public async Task<IActionResult> Deactivate()
     {
         var userId = HttpContext.User.Claims
@@ -49,7 +49,7 @@ public class DeactivateUserController : BaseApiController
     }
 
     [HttpPost("{userId:guid}/deactivate")]
-    [Authorize(Roles = nameof(Role.Administrator))]
+    [HasRole(nameof(Role.Administrator))]
     public async Task<IActionResult> Deactivate(Guid userId)
     {
         var requesterId = HttpContext.User.Claims
