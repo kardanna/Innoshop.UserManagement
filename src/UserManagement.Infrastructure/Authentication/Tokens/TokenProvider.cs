@@ -5,11 +5,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using UserManagement.Application.Interfaces;
+using UserManagement.Application.Options;
 using UserManagement.Application.UseCases.Users.Login;
 using UserManagement.Domain.Entities;
 using UserManagement.Domain.Errors;
 using UserManagement.Domain.Shared;
-using UserManagement.Infrastructure.Authentication.Configuration;
 using UserManagement.Infrastructure.Authentication.Keys;
 using UserManagement.Infrastructure.Authentication.Repositories;
 

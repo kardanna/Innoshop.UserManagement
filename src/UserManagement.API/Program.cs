@@ -73,6 +73,7 @@ public class Program
 
         //Scoped services
         builder.Services.AddScoped<ISigningKeyProvider, SigningKeyProvider>();
+        builder.Services.AddScoped<IValidationKeysProvider, ValidationKeysProvider>();
         builder.Services.AddScoped<ITokenProvider, TokenProvider>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IEmailService, EmailService>();

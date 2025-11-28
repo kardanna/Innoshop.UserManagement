@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Options;
-using UserManagement.Infrastructure.Authentication.Configuration;
+using UserManagement.Application.Options;
 
 namespace UserManagement.API.OptionsSetup;
 

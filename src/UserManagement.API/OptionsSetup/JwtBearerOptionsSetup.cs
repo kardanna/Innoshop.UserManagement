@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using UserManagement.Infrastructure.Authentication.Configuration;
+using UserManagement.Application.Options;
 using UserManagement.Infrastructure.Authentication.Keys;
 
 namespace UserManagement.API.OptionsSetup;

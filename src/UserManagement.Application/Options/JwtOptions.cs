@@ -1,4 +1,4 @@
-namespace UserManagement.Infrastructure.Authentication.Configuration;
+namespace UserManagement.Application.Options;
 
 public class JwtOptions
 {

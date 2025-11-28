@@ -1,22 +1,22 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using UserManagement.Infrastructure.Authentication.Configuration;
-using UserManagement.Infrastructure.Authentication.Keys;
+using UserManagement.Application.Options;
+using UserManagement.Application.UseCases.ValidationKeys;
 
 namespace UserManagement.Presentation.Controllers;
 
 [ApiController]
 [Route(".well-known")]
-public class OpenIdController : ControllerBase
+public class OpenIdController : BaseApiController
 {
-    private readonly ISigningKeyProvider _signingKeysProvider;
     private readonly JwtOptions _jwtOptions;
 
     public OpenIdController(
-        ISigningKeyProvider signingKeysProvider,
+        ISender sender,
         IOptions<JwtOptions> jwtOptions)
+        : base(sender)
     {
-        _signingKeysProvider = signingKeysProvider;
         _jwtOptions = jwtOptions.Value;
     }
 
@@ -42,7 +42,12 @@ public class OpenIdController : ControllerBase
     [HttpGet("jwks.json")]
     public async Task<IActionResult> GetJwks()
     {
-        var keys = _signingKeysProvider.GetJsonWebKeys();
-        return new JsonResult( new { keys } );
+        var query = new GetValidationKeysQuery();
+
+        var response = await _sender.Send(query);
+
+        if (response.IsFailure) return HandleFailure(response);
+
+        return new JsonResult( new { keys = response.Value } );
     }
 }

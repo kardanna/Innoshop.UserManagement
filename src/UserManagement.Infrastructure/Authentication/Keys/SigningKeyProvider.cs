@@ -37,13 +37,6 @@ public class SigningKeyProvider : ISigningKeyProvider
         _logger = logger;
     }
 
-    public IEnumerable<JsonWebKey> GetJsonWebKeys()
-    {
-        return _cache
-            .GetUnexpiredValidationKeys()
-            .Select(k => JsonWebKeyConverter.ConvertFromRSASecurityKey(k));
-    }
-
     public async Task<RsaSecurityKey> GetSigningKeyAsync()
     {
         RsaSecurityKey? key = _cache.GetKeyForSigning();
