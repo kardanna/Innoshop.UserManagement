@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using UserManagement.Presentation.Behaviours;
+using UserManagement.Application.Behaviours;
 using UserManagement.Presentation.ExceptionHandlers;
 using UserManagement.API.OptionsSetup;
 using UserManagement.Application.Interfaces;

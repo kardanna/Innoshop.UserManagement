@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using UserManagement.Domain.Shared;
 
-namespace UserManagement.Presentation.Behaviours;
+namespace UserManagement.Application.Behaviours;
 
 public class PipelineValidationBehaviour<TRequest, TResponse>
     : IPipelineBehavior<TRequest, TResponse>
