@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Exceptions;
 using UserManagement.Domain.Exceptions;
 using UserManagement.Infrastructure.Messaging.Abstractions;
 
@@ -65,7 +66,16 @@ public class UserEventsExchange : IExchange, IHostedService
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Closing the channel for sending messages to '{ExchangeName}'...", EXCHANGE_NAME);
-        if (channel is not null) await channel.CloseAsync(cancellationToken);
-        _logger.LogInformation("Successfully closed the channel for sending messages to '{ExchangeName}'.", EXCHANGE_NAME);
+        
+        try
+        {
+            if (channel is not null) await channel.CloseAsync(cancellationToken);
+            
+            _logger.LogInformation("Successfully closed the channel for sending messages to '{ExchangeName}'.", EXCHANGE_NAME);
+        }
+        catch (AlreadyClosedException ex)
+        {
+            _logger.LogError(ex, "Error occured while closing the channel for sending messages to '{ExchangeName}'.", EXCHANGE_NAME);
+        }
     }
 }

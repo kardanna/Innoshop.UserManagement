@@ -1,28 +1,11 @@
 using FluentValidation;
-using MediatR;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using UserManagement.Application.Behaviours;
-using UserManagement.Presentation.ExceptionHandlers;
 using UserManagement.API.OptionsSetup;
-using UserManagement.Application.Interfaces;
-using UserManagement.Application.Policies;
-using UserManagement.Application.Repositories;
-using UserManagement.Application.Services;
-using UserManagement.Domain.Entities;
-using UserManagement.Infrastructure.Authentication.Keys;
-using UserManagement.Infrastructure.Authentication.Repositories;
-using UserManagement.Infrastructure.Authentication.Tokens;
-using UserManagement.Infrastructure.Messaging;
 using UserManagement.Persistence;
-using UserManagement.Persistence.Repositories;
-using UserManagement.Infrastructure.Messaging.Abstractions;
-using UserManagement.Infrastructure.EmailSender;
+using UserManagement.Infrastructure;
+using UserManagement.Application;
 using UserManagement.Presentation;
-using UserManagement.Infrastructure.BackgroundJobs;
 
 namespace UserManagement.API;
 
@@ -32,11 +15,34 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers().AddApplicationPart(UserManagement.Presentation.AssemblyReference.Assembly);
-        
         builder.Services.AddOpenApi();
 
-        //Database
+
+        //Policies, Services, PipelineBehaviour, PasswordHasher        
+        builder.Services.AddUserManagemenetApplication();
+
+        //MediatR
+        builder.Services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(UserManagement.Application.AssemblyReference.Assembly));
+
+        //Validation behaviour
+        builder.Services.AddValidatorsFromAssembly(UserManagement.Application.AssemblyReference.Assembly,
+            includeInternalTypes: true);
+
+
+        //Authentication, Messaging, EmailSender, BackgroundJobs
+        builder.Services.AddUserManagementInfrastructure();
+        builder.Services
+            .AddFluentEmail(
+                builder.Configuration["UserManagement:EmailOptions:EmailSender"],
+                builder.Configuration["UserManagement:EmailOptions:Sender"])
+            .AddSmtpSender(
+                builder.Configuration["Papercut:HostName"],
+                builder.Configuration.GetValue<int>("Papercut:Port"));
+
+
+        //DbContext, UnitOfWork, Repositories
+        builder.Services.AddUserManagementPersistence();
         builder.Services.AddDbContext<ApplicationContext>(options =>
         {
             options.UseSqlServer(
@@ -44,107 +50,34 @@ public class Program
                 contextOptions =>
                 {
                     contextOptions.EnableRetryOnFailure(
-                        maxRetryCount: 10,
-                        maxRetryDelay: TimeSpan.FromSeconds(5),
+                        maxRetryCount: 6,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorNumbersToAdd: null
                     );
                 });
         });
-        builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        //Scoped
-        builder.Services.AddScoped<ISigningKeyRecordRepository, SigningKeyRecordsRepository>();
-        builder.Services.AddScoped<ITokenRecordRepository, TokenRecordRepository>();
-        builder.Services.AddScoped<IUserRepository, UserRepository>();
-        builder.Services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
-        builder.Services.AddScoped<IEmailVerificationAttemptRepository, EmailVerificationAttemptRepository>();
-        builder.Services.AddScoped<IUserDeactivationRepository, UserDeactivationRepository>();
-        builder.Services.AddScoped<IPasswordRestoreAttemptRepository, PasswordRestoreAttemptRepository>();
-        builder.Services.AddScoped<IUserPolicy, UserPolicy>();
-        builder.Services.AddScoped<IEmailPolicy, EmailPolicy>();
-        builder.Services.AddScoped<IPasswordPolicy, PasswordPolicy>();
+        //AddControllers, UrlProvider, GlobalExceptionHandler, AddHttpContextAccessor
+        builder.Services.AddUserManagementPresentation();
+
         
-        //UrlProvider
-        builder.Services.AddScoped<IUrlProvider, UrlProvider>();
-        builder.Services.AddHttpContextAccessor();
-
-        //Singletons
-        builder.Services.AddSingleton<ISigningKeyCache, SigningKeysCache>();
-        builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
-
-        //Scoped services
-        builder.Services.AddScoped<ISigningKeyProvider, SigningKeyProvider>();
-        builder.Services.AddScoped<IValidationKeysProvider, ValidationKeysProvider>();
-        builder.Services.AddScoped<ITokenProvider, TokenProvider>();
-        builder.Services.AddScoped<IUserService, UserService>();
-        builder.Services.AddScoped<IEmailService, EmailService>();
-
-        //Configuring options
-        builder.Services.ConfigureOptions<JwtOptionsSetup>();
-        builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
-        builder.Services.ConfigureOptions<SigningKeyOptionsSetup>();
+        //Options
+        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
         builder.Services.ConfigureOptions<LoginOptionsSetup>();
         builder.Services.ConfigureOptions<RegistrationOptionsSetup>();
         builder.Services.ConfigureOptions<EmailOptionsSetup>();
-        
         builder.Services.ConfigureOptions<PasswordOptionsSetup>();
-
-        //Hosted services
-        builder.Services.AddHostedService<SigningKeyCacheInitializer>();
-
-        //RabbitMQ messaging
-        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
-        builder.Services.AddSingleton<RabbitMQConnectionProvider>();
-        builder.Services.AddSingleton<IRabbitMQConnectionProvider>(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
-        builder.Services.AddSingleton<RabbitMQConfigurator>();
-        builder.Services.AddSingleton<IRabbitMQConfigurator>(sp => sp.GetRequiredService<RabbitMQConfigurator>());
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQConfigurator>());
-        builder.Services.AddSingleton<UserEventsExchange>();
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<UserEventsExchange>());
-        builder.Services.AddSingleton<IInnoshopNotifier, InnoshopNotifier>();
-
-        //Email sender
-        builder.Services
-            .AddFluentEmail(
-                builder.Configuration["UserManagement:EmailOptions:EmailSender"],
-                builder.Configuration["UserManagement:EmailOptions:Sender"]
-            )
-            .AddSmtpSender(
-                builder.Configuration["Papercut:HostName"],
-                builder.Configuration.GetValue<int>("Papercut:Port")
-            );
-        builder.Services.AddTransient<IEmailSender, EmailSender>();
-
-        //Authentication configuration
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme);
-
-        //Validation behaviour
-        builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PipelineValidationBehaviour<,>));
-        builder.Services.AddValidatorsFromAssembly(UserManagement.Application.AssemblyReference.Assembly,
-            includeInternalTypes: true);
+        builder.Services.ConfigureOptions<JwtOptionsSetup>();
+        builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
+        builder.Services.ConfigureOptions<SigningKeyOptionsSetup>();
         
-        //Data protection configuration
-        builder.Services.AddDataProtection()
-            .SetApplicationName("Innoshop.UserManagement");
-
-        //Global exception handler
-        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-
+        
         //Logging
         builder.Host.UseSerilog((context, loggerConfig) =>
         {
             loggerConfig.ReadFrom.Configuration(context.Configuration);
         });
 
-        //MediatR
-        builder.Services.AddMediatR(cfg =>
-            cfg.RegisterServicesFromAssembly(UserManagement.Application.AssemblyReference.Assembly));
-        
-
-        //Quartz
-        builder.Services.AddBackgroundJobs();
 
         var app = builder.Build();
         
@@ -164,6 +97,12 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+            db.Database.Migrate();
+        }
 
         app.Run();
     }

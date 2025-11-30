@@ -4,7 +4,7 @@ using UserManagement.Infrastructure.BackgroundJobs.Configuration;
 
 namespace UserManagement.Infrastructure.BackgroundJobs;
 
-public static class QurtzDependencyInjection
+public static class BackgroundJobsDependencyInjection
 {
     public static void AddBackgroundJobs(this IServiceCollection services)
     {

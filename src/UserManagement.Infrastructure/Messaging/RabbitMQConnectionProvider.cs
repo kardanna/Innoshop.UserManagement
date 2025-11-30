@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using UserManagement.Infrastructure.Messaging.Abstractions;
 using UserManagement.Infrastructure.Messaging.Options;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Exceptions;
 
 namespace UserManagement.Infrastructure.Messaging;
 
@@ -12,7 +13,7 @@ public class RabbitMQConnectionProvider : IRabbitMQConnectionProvider, IHostedSe
     private readonly RabbitMQOptions _options;
     private readonly ILogger<RabbitMQConnectionProvider> _logger;
     
-    private IConnection? connection;
+    private IConnection? _connection;
     private readonly TaskCompletionSource<IConnection> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public RabbitMQConnectionProvider(
@@ -33,22 +34,32 @@ public class RabbitMQConnectionProvider : IRabbitMQConnectionProvider, IHostedSe
         var factory = new ConnectionFactory()
         {
             HostName = _options.HostName,
+            Port = _options.Port,
             UserName = _options.UserName,
             Password = _options.Password
         };
 
-        _logger.LogInformation($"Establishing a RabbitMQ connection...");
+        _logger.LogInformation("Establishing a RabbitMQ connection...");
         
-        connection = await factory.CreateConnectionAsync(cancellationToken);
-        _tcs.TrySetResult(connection);
+        _connection = await factory.CreateConnectionAsync(cancellationToken);
+        _tcs.TrySetResult(_connection);
         
-        _logger.LogInformation($"Successfully established RabbitMQ connection.");
+        _logger.LogInformation("Successfully established RabbitMQ connection.");
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation($"Closing RabbitMQ connection...");
-        if (connection != null) await connection.CloseAsync(cancellationToken);
-        _logger.LogInformation($"Successfully closed RabbitMQ connection.");
+        _logger.LogInformation("Closing RabbitMQ connection...");
+
+        try
+        {
+            if (_connection != null) await _connection.CloseAsync(cancellationToken);
+            
+            _logger.LogInformation("Successfully closed RabbitMQ connection.");
+        }
+        catch (AlreadyClosedException ex)
+        {
+            _logger.LogError(ex, "Error occured while closing connection.");
+        }
     }
 }
