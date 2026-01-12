@@ -45,14 +45,14 @@ public class Program
         builder.Services.AddUserManagementPersistence();
         builder.Services.AddDbContext<ApplicationContext>(options =>
         {
-            options.UseSqlServer(
-                builder.Configuration.GetConnectionString("SqlServer"),
+            options.UseNpgsql(
+                builder.Configuration.GetConnectionString("PostgreSQL"),
                 contextOptions =>
                 {
                     contextOptions.EnableRetryOnFailure(
                         maxRetryCount: 6,
                         maxRetryDelay: TimeSpan.FromSeconds(10),
-                        errorNumbersToAdd: null
+                        errorCodesToAdd: null
                     );
                 });
         });

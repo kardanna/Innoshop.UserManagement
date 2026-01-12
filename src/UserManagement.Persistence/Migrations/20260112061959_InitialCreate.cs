@@ -27,9 +27,9 @@ namespace UserManagement.Persistence.Migrations
                 schema: "Identity",
                 columns: table => new
                 {
-                    Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    AttemtedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DeviceFingerprint = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    AttemtedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DeviceFingerprint = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -41,8 +41,8 @@ namespace UserManagement.Persistence.Migrations
                 schema: "Identity",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -55,10 +55,10 @@ namespace UserManagement.Persistence.Migrations
                 schema: "SigningKeys",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PublicKeyPem = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PrivateKeyPem = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IssuedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    PublicKeyPem = table.Column<string>(type: "text", nullable: false),
+                    PrivateKeyPem = table.Column<string>(type: "text", nullable: false),
+                    IssuedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -70,19 +70,17 @@ namespace UserManagement.Persistence.Migrations
                 schema: "Identity",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    FirstName = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    LastName = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     DateOfBirth = table.Column<DateOnly>(type: "date", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    IsEmailVerified = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsDeactivated = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    DeactivationRequestedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    DeletionRequestedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    IsEmailVerified = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    DeletionRequestedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastModifiedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -94,14 +92,14 @@ namespace UserManagement.Persistence.Migrations
                 schema: "Identity",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    VerificationCode = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PreviousEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AttemptedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsSucceeded = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    SucceededAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    VerificationCode = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    PreviousEmail = table.Column<string>(type: "text", nullable: true),
+                    AttemptedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsSucceeded = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    SucceededAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -121,17 +119,16 @@ namespace UserManagement.Persistence.Migrations
                 schema: "Identity",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AttemptCode = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AttemptedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsSucceeded = table.Column<bool>(type: "bit", nullable: false),
-                    SucceededAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AttemptCode = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AttemptedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsSucceeded = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    SucceededAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PasswordRestoreAttempt", x => x.Id);
-                    table.UniqueConstraint("AK_PasswordRestoreAttempt_AttemptCode", x => x.AttemptCode);
                     table.ForeignKey(
                         name: "FK_PasswordRestoreAttempt_User_UserId",
                         column: x => x.UserId,
@@ -146,12 +143,12 @@ namespace UserManagement.Persistence.Migrations
                 schema: "Authentication",
                 columns: table => new
                 {
-                    AccessTokenId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IssuedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    AccessTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DeviceFingerprint = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    AccessTokenId = table.Column<Guid>(type: "uuid", nullable: false),
+                    IssuedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    AccessTokenExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RefreshToken = table.Column<string>(type: "text", nullable: false),
+                    DeviceFingerprint = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -166,12 +163,51 @@ namespace UserManagement.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserDeactivation",
+                schema: "Identity",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DeactivatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DeactivationRequesterId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Commentary = table.Column<string>(type: "text", nullable: false),
+                    ReactivatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReactivationRequesterId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserDeactivation", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserDeactivation_User_DeactivationRequesterId",
+                        column: x => x.DeactivationRequesterId,
+                        principalSchema: "Identity",
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserDeactivation_User_ReactivationRequesterId",
+                        column: x => x.ReactivationRequesterId,
+                        principalSchema: "Identity",
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserDeactivation_User_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "Identity",
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserRole",
                 schema: "Identity",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RoleId = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RoleId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -205,11 +241,11 @@ namespace UserManagement.Persistence.Migrations
             migrationBuilder.InsertData(
                 schema: "Identity",
                 table: "User",
-                columns: new[] { "Id", "DateOfBirth", "DeactivationRequestedAt", "DeletionRequestedAt", "Email", "FirstName", "IsEmailVerified", "LastName", "PasswordHash" },
+                columns: new[] { "Id", "CreatedAt", "DateOfBirth", "DeletionRequestedAt", "Email", "FirstName", "IsEmailVerified", "LastModifiedAt", "LastName", "PasswordHash" },
                 values: new object[,]
                 {
-                    { new Guid("160be924-907f-4d70-d15c-08de2383d454"), new DateOnly(2000, 1, 1), null, null, "ivan.ivanov@gmail.com", "Ivan", true, "Ivanov", "AQAAAAIAAYagAAAAEDUID6axCz6cvyUWqrPGPCrA+Mm5w8K+1vSgeMrXoqk+NjrjeiCIS9IevKEbet2QdQ==" },
-                    { new Guid("30fc2d9e-3bb0-4bdc-d15b-08de2383d454"), new DateOnly(2000, 1, 1), null, null, "admin@innoshop.by", "Admin", true, "Admin", "AQAAAAIAAYagAAAAEBZ2EtG4oB80p/B/1tWjr27MgHcqtVLPyaf7a/wnQsC7/rzf0J2fVO1jMhrGPy5vQw==" }
+                    { new Guid("160be924-907f-4d70-d15c-08de2383d454"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateOnly(2000, 1, 1), null, "ivan.ivanov@gmail.com", "Ivan", true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Ivanov", "AQAAAAIAAYagAAAAEDUID6axCz6cvyUWqrPGPCrA+Mm5w8K+1vSgeMrXoqk+NjrjeiCIS9IevKEbet2QdQ==" },
+                    { new Guid("30fc2d9e-3bb0-4bdc-d15b-08de2383d454"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateOnly(2000, 1, 1), null, "admin@innoshop.by", "Admin", true, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Admin", "AQAAAAIAAYagAAAAEBZ2EtG4oB80p/B/1tWjr27MgHcqtVLPyaf7a/wnQsC7/rzf0J2fVO1jMhrGPy5vQw==" }
                 });
 
             migrationBuilder.InsertData(
@@ -229,6 +265,12 @@ namespace UserManagement.Persistence.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PasswordRestoreAttempt_AttemptCode",
+                schema: "Identity",
+                table: "PasswordRestoreAttempt",
+                column: "AttemptCode");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PasswordRestoreAttempt_UserId",
                 schema: "Identity",
                 table: "PasswordRestoreAttempt",
@@ -238,6 +280,30 @@ namespace UserManagement.Persistence.Migrations
                 name: "IX_TokenRecord_UserId",
                 schema: "Authentication",
                 table: "TokenRecord",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_User_Email",
+                schema: "Identity",
+                table: "User",
+                column: "Email");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserDeactivation_DeactivationRequesterId",
+                schema: "Identity",
+                table: "UserDeactivation",
+                column: "DeactivationRequesterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserDeactivation_ReactivationRequesterId",
+                schema: "Identity",
+                table: "UserDeactivation",
+                column: "ReactivationRequesterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserDeactivation_UserId",
+                schema: "Identity",
+                table: "UserDeactivation",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -269,6 +335,10 @@ namespace UserManagement.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "TokenRecord",
                 schema: "Authentication");
+
+            migrationBuilder.DropTable(
+                name: "UserDeactivation",
+                schema: "Identity");
 
             migrationBuilder.DropTable(
                 name: "UserRole",

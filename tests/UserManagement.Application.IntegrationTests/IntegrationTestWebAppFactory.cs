@@ -7,9 +7,9 @@ using Microsoft.Extensions.Options;
 using UserManagement.API;
 using UserManagement.Infrastructure.Messaging.Options;
 using UserManagement.Persistence;
-using Testcontainers.MsSql;
 using Testcontainers.RabbitMq;
 using Testcontainers.Papercut;
+using Testcontainers.PostgreSql;
 using FluentEmail.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using FluentEmail.Smtp;
@@ -19,8 +19,8 @@ namespace UserManagement.Application.IntegrationTests;
 
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly MsSqlContainer _dbContainer = new MsSqlBuilder()
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
+        .WithImage("postgres:latest")
         .Build();
     
     private const string RabbitMQUsername = "test";
@@ -113,14 +113,14 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         services.AddDbContext<ApplicationContext>(options =>
         {
             options
-                .UseSqlServer(
+                .UseNpgsql(
                     _dbContainer.GetConnectionString(),
                     contextOptions =>
                         {
                             contextOptions.EnableRetryOnFailure(
                                 maxRetryCount: 10,
                                 maxRetryDelay: TimeSpan.FromSeconds(5),
-                                errorNumbersToAdd: null
+                                errorCodesToAdd: null
                             );
                         });
         });
